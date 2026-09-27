@@ -1,0 +1,133 @@
+import { StyleSheet } from 'react-native';
+
+export const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: 24,
+    paddingTop: 36,
+    paddingBottom: 24,
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    flexGrow: 1,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#1F2937',
+  },
+  blocoCampo: {
+    marginBottom: 14,
+  },
+  labelCampo: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 6,
+  },
+  inputLilas: {
+    height: 50,
+    backgroundColor: '#E9D5FF',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    fontSize: 15,
+    color: '#1F2937',
+    fontWeight: '500',
+  },
+  telefoneContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 50,
+    backgroundColor: '#E9D5FF',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+  },
+  telefoneInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#1F2937',
+    fontWeight: '500',
+  },
+  selectCargo: {
+    height: 50,
+    backgroundColor: '#E9D5FF',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  textoCargo: {
+    fontSize: 15,
+    color: '#1F2937',
+    fontWeight: '500',
+  },
+  seta: {
+    fontSize: 10,
+    color: '#374151',
+  },
+  inputOutroCargo: {
+    marginTop: 10,
+    backgroundColor: '#F3E8FF',
+    borderWidth: 1,
+    borderColor: '#C084FC',
+  },
+  button: {
+    backgroundColor: '#4B0082',
+    height: 50,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    elevation: 2,
+  },
+  buttonPressed: {
+    opacity: 0.85,
+    backgroundColor: '#3A0066',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    maxHeight: 380,
+  },
+  modalTitulo: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  itemOpcao: {
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  itemOpcaoAtiva: {
+    backgroundColor: '#FAF5FF',
+    borderRadius: 8,
+  },
+  textoOpcao: {
+    fontSize: 15,
+    color: '#374151',
+    textAlign: 'center',
+  },
+  textoOpcaoAtiva: {
+    color: '#7E22CE',
+    fontWeight: '700',
+  },
+});

@@ -1,8 +1,30 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Alert, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Alert,
+  Pressable,
+  ActivityIndicator,
+  Modal,
+  FlatList,
+  TouchableOpacity,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { api } from '../services/api';
-import { Picker } from '@react-native-picker/picker';
+import { PAISES, Pais } from '../constants/paises';
+import { SeletorPais } from '../components/SeletorPais';
+import { styles } from './Cadastro.style';
+
+const CARGOS = [
+  { chave: 'PROJETISTA', rotulo: 'Projetista' },
+  { chave: 'CONFERENTE', rotulo: 'Conferente' },
+  { chave: 'CONSULTOR_VENDAS', rotulo: 'Consultor de Vendas' },
+  { chave: 'OUTROS', rotulo: 'Outros' },
+];
 
 export function Cadastro() {
   const navigation = useNavigation<any>();
@@ -11,159 +33,202 @@ export function Cadastro() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [telefone, setTelefone] = useState('');
-  const [funcao, setFuncao] = useState('CONSULTOR_VENDAS');
+  const [paisSelecionado, setPaisSelecionado] = useState<Pais>(PAISES[0]);
+  
+  const [cargoSelecionado, setCargoSelecionado] = useState(CARGOS[1]);
+  const [modalCargoVisivel, setModalCargoVisivel] = useState(false);
+  const [outroCargo, setOutroCargo] = useState('');
+  
   const [isLoading, setIsLoading] = useState(false);
 
+  const aplicarMascaraTelefone = (valor: string) => {
+    let apenasNumeros = valor.replace(/\D/g, '');
+    if (apenasNumeros.length > 11) apenasNumeros = apenasNumeros.substring(0, 11);
+
+    let formatado = apenasNumeros;
+    if (apenasNumeros.length > 2) formatado = `(${apenasNumeros.substring(0, 2)}) ${apenasNumeros.substring(2)}`;
+    if (apenasNumeros.length > 7) formatado = `(${apenasNumeros.substring(0, 2)}) ${apenasNumeros.substring(2, 7)}-${apenasNumeros.substring(7, 11)}`;
+
+    setTelefone(formatado);
+  };
+
   const handleCadastro = async () => {
-    if (!nome || !email || !senha || !telefone) {
+    const telefoneLimpo = telefone.replace(/\D/g, '');
+
+    if (!nome.trim() || !email.trim() || !senha.trim() || !telefoneLimpo) {
       Alert.alert('Campos obrigatórios', 'Por favor, preencha todos os campos.');
+      return;
+    }
+
+    if (cargoSelecionado.chave === 'OUTROS' && !outroCargo.trim()) {
+      Alert.alert('Campo obrigatório', 'Por favor, digite qual é o seu cargo.');
       return;
     }
 
     setIsLoading(true);
 
+    const ddiLimpo = paisSelecionado.ddi.replace('+', '');
+    const telefoneCompleto = `${ddiLimpo}${telefoneLimpo}`;
+
     try {
-      await api.post('/users/register', { 
+      await api.post('/users/register', {
         name: nome,
         email: email,
         password: senha,
-        phone: telefone,
-        role: funcao, 
+        phone: telefoneCompleto,
+        role: cargoSelecionado.chave,
+        otherRoleDescription: cargoSelecionado.chave === 'OUTROS' ? outroCargo.trim() : null,
       });
 
-      Alert.alert('Sucesso', 'Conta criada com sucesso!');
-      navigation.navigate('Login');
-
+      navigation.navigate('VerificacaoToken', { telefone: telefoneCompleto });
     } catch (error: any) {
-      console.error(error);
-      Alert.alert('Erro', 'Não foi possível realizar o cadastro. Verifique os dados.');
+      const mensagem = error?.response?.data?.message || 'Não foi possível realizar o cadastro.';
+      Alert.alert('Erro', mensagem);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Criar Conta</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1, backgroundColor: '#FFFFFF' }}
+    >
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <Text style={styles.title}>Criar Conta</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Nome Completo"
-        value={nome}
-        onChangeText={setNome}
-      />
+        <View style={styles.blocoCampo}>
+          <Text style={styles.labelCampo}>Nome Completo</Text>
+          <TextInput
+            style={styles.inputLilas}
+            placeholder="Digite seu nome completo"
+            placeholderTextColor="#7E758C"
+            value={nome}
+            onChangeText={setNome}
+          />
+        </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="E-mail"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
+        <View style={styles.blocoCampo}>
+          <Text style={styles.labelCampo}>E-mail</Text>
+          <TextInput
+            style={styles.inputLilas}
+            placeholder="Digite seu e-mail"
+            placeholderTextColor="#7E758C"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+        </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        value={senha}
-        onChangeText={setSenha}
-        secureTextEntry
-      />
+        <View style={styles.blocoCampo}>
+          <Text style={styles.labelCampo}>Senha</Text>
+          <TextInput
+            style={styles.inputLilas}
+            placeholder="Digite sua senha"
+            placeholderTextColor="#7E758C"
+            value={senha}
+            onChangeText={setSenha}
+            secureTextEntry
+          />
+        </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Telefone"
-        value={telefone}
-        onChangeText={setTelefone}
-        keyboardType="phone-pad"
-      />
+        <View style={styles.blocoCampo}>
+          <Text style={styles.labelCampo}>Telefone</Text>
+          <View style={styles.telefoneContainer}>
+            <SeletorPais
+              paisSelecionado={paisSelecionado}
+              onSelecionarPais={setPaisSelecionado}
+            />
+            <TextInput
+              style={styles.telefoneInput}
+              placeholder="(  ) "
+              placeholderTextColor="#7E758C"
+              keyboardType="phone-pad"
+              value={telefone}
+              onChangeText={aplicarMascaraTelefone}
+              maxLength={15}
+            />
+          </View>
+        </View>
 
-      <View style={styles.pickerContainer}>
-        <Text style={styles.pickerLabel}>Cargo:</Text>
-        <Picker
-          selectedValue={funcao}
-          onValueChange={(itemValue) => setFuncao(itemValue)}
-          style={styles.picker}
+        <View style={styles.blocoCampo}>
+          <Text style={styles.labelCampo}>Cargo</Text>
+          <TouchableOpacity
+            style={styles.selectCargo}
+            activeOpacity={0.7}
+            onPress={() => setModalCargoVisivel(true)}
+          >
+            <Text style={styles.textoCargo}>{cargoSelecionado.rotulo}</Text>
+            <Text style={styles.seta}>▼</Text>
+          </TouchableOpacity>
+
+          {cargoSelecionado.chave === 'OUTROS' && (
+            <TextInput
+              style={[styles.inputLilas, styles.inputOutroCargo]}
+              placeholder="Digite o seu cargo"
+              placeholderTextColor="#7E758C"
+              value={outroCargo}
+              onChangeText={setOutroCargo}
+              autoFocus
+            />
+          )}
+        </View>
+
+        <Pressable
+          style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+          onPress={handleCadastro}
+          disabled={isLoading}
         >
-          <Picker.Item label="Consultor de Vendas" value="CONSULTOR_VENDAS" />
-          <Picker.Item label="Projetista" value="PROJETISTA" />
-          <Picker.Item label="Administrador" value="ADMINISTRADOR" />
-          <Picker.Item label="Conferente" value="CONFERENTE" />
-          <Picker.Item label="Outros" value="OUTROS" />
-        </Picker>
-      </View>
+          {isLoading ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.buttonText}>Cadastrar</Text>
+          )}
+        </Pressable>
 
-      <Pressable 
-        style={({ pressed }) => [
-          styles.button,
-          pressed && styles.buttonPressed
-        ]}
-        onPress={handleCadastro} 
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="#FFF" />
-        ) : (
-          <Text style={styles.buttonText}>Cadastrar</Text>
-        )}
-      </Pressable>
-    </View>
+        <Modal
+          visible={modalCargoVisivel}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setModalCargoVisivel(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setModalCargoVisivel(false)}
+          >
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitulo}>Selecione o Cargo</Text>
+              <FlatList
+                data={CARGOS}
+                keyExtractor={(item) => item.chave}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.itemOpcao,
+                      item.chave === cargoSelecionado.chave && styles.itemOpcaoAtiva,
+                    ]}
+                    onPress={() => {
+                      setCargoSelecionado(item);
+                      setModalCargoVisivel(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.textoOpcao,
+                        item.chave === cargoSelecionado.chave && styles.textoOpcaoAtiva,
+                      ]}
+                    >
+                      {item.rotulo}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-    color: '#333',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#CCC',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 15,
-    backgroundColor: '#F5F5F5',
-  },
-  button: {
-    backgroundColor: '#4B0082',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonPressed: {
-    opacity: 0.8,
-    backgroundColor: '#3A0066',
-  },
-  buttonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  pickerContainer: {
-    marginBottom: 15,
-    backgroundColor: '#F5F5F5',
-    borderWidth: 1,
-    borderColor: '#CCC',
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  pickerLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 12,
-    marginTop: 8,
-  },
-  picker: {
-    height: 50,
-    width: '100%',
-  }
-});
