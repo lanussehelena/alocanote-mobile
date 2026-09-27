@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { api } from '../services/api';
+import { Pressable } from 'react-native';
 
 export function Login() {
   const [email, setEmail] = useState('');
@@ -97,11 +98,14 @@ export function Login() {
       </TouchableOpacity>
 
       
-      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-        <Text style={styles.registerText}>
-          Não tem conta? <Text style={styles.registerLink}>Cadastre-se</Text>
-        </Text>
-      </TouchableOpacity>
+      <Pressable 
+        onPress={() => navigation.navigate('Cadastro')}
+        style={({ pressed }) => [
+          pressed && { opacity: 0.6 }
+        ]}
+>
+        <Text style={styles.registerText}>Não tem conta? Cadastre-se</Text>
+</Pressable>
     </View>
   );
 }
