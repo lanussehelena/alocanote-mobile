@@ -28,3 +28,10 @@ export interface RegisterUserRequestDTO {
   role: Role;
   customRole?: string;
 }
+
+export interface Notebook {
+  id: number;
+  name: string;
+  status: NotebookStatus;
+  currentUser?: User;
+}

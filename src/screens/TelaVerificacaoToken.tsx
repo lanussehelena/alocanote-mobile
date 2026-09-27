@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  SafeAreaView,
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
@@ -14,6 +13,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { api } from '../services/api';
 import { styles } from './TelaVerificacaoToken.styles';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export function TelaVerificacaoToken() {
   const navigation = useNavigation<any>();
@@ -115,9 +115,9 @@ export function TelaVerificacaoToken() {
       >
         <View style={styles.logoContainer}>
          <Image
-  source={require('../../assets/logo.png')}
-  style={styles.logo}
-  resizeMode="contain"
+          source={require('../../assets/logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
 />
         </View>
 

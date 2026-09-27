@@ -18,6 +18,7 @@ import { api } from '../services/api';
 import { PAISES, Pais } from '../constants/paises';
 import { SeletorPais } from '../components/SeletorPais';
 import { styles } from './Cadastro.style';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CARGOS = [
   { chave: 'PROJETISTA', rotulo: 'Projetista' },
