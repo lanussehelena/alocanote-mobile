@@ -14,11 +14,10 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { api } from '../services/api';
-import { PAISES, Pais } from '../constants/paises';
-import { SeletorPais } from '../components/SeletorPais';
-import { styles } from './Cadastro.style';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { api } from '../../services/api';
+import { PAISES, Pais } from '../../constants/paises';
+import { SeletorPais } from '../../components/SeletorPais/SeletorPais';
+import { styles } from './Cadastro.styles';
 
 const CARGOS = [
   { chave: 'PROJETISTA', rotulo: 'Projetista' },
@@ -78,6 +77,7 @@ export function Cadastro() {
         password: senha,
         phone: telefoneCompleto,
         role: cargoSelecionado.chave,
+        customRole: cargoSelecionado.chave === 'OUTROS' ? outroCargo.trim() : null,
         otherRoleDescription: cargoSelecionado.chave === 'OUTROS' ? outroCargo.trim() : null,
       });
 

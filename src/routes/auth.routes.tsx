@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Login } from '../screens/Login';
-import { Cadastro } from '../screens/Cadastro';
-import { TelaVerificacaoToken } from '../screens/TelaVerificacaoToken';
+import { Login } from '../screens/Login/Login';
+import { Cadastro } from '../screens/Cadastro/Cadastro';
+import { TelaVerificacaoToken } from '../screens/TelaVerificacaoToken/TelaVerificacaoToken';
 
 const Stack = createNativeStackNavigator();
 
