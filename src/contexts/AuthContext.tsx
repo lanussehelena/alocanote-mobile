@@ -23,12 +23,23 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function clearStorageOnStart() {
-      await AsyncStorage.multiRemove(['@AlocaNote:user', '@AlocaNote:token']);
-      setLoading(false);
+    async function loadStorageData() {
+      try {
+        const storageUser = await AsyncStorage.getItem('@AlocaNote:user');
+        const storageToken = await AsyncStorage.getItem('@AlocaNote:token');
+
+        if (storageUser && storageToken) {
+          api.defaults.headers.Authorization = `Bearer ${storageToken}`;
+          setUser(JSON.parse(storageUser));
+        }
+      } catch (error) {
+        console.error('Erro ao carregar sessão do usuário:', error);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    clearStorageOnStart();
+    loadStorageData();
   }, []);
 
   async function signIn(token: string, loggedUser: User) {
