@@ -4,16 +4,15 @@ import {
   Text, 
   TextInput, 
   Alert, 
-  StyleSheet, 
   Image, 
-  TouchableOpacity, 
+  Pressable, 
   ActivityIndicator 
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { api } from '../services/api';
-import { Pressable } from 'react-native';
+import { api } from '../../services/api';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { styles } from './Login.styles';
 
 export function Login() {
   const [email, setEmail] = useState('');
@@ -56,7 +55,7 @@ export function Login() {
   return (
     <SafeAreaView style={styles.container}>
       <Image 
-        source={require('../../assets/logo.png')} 
+        source={require('../../../assets/logo.png')} 
         style={styles.logo} 
         resizeMode="contain" 
       />
@@ -82,8 +81,8 @@ export function Login() {
         />
       </View>
 
-      <TouchableOpacity 
-        style={styles.button} 
+      <Pressable 
+        style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]} 
         onPress={handleLogin}
         disabled={isLoading}
       >
@@ -92,7 +91,7 @@ export function Login() {
         ) : (
           <Text style={styles.buttonText}>Entrar</Text>
         )}
-      </TouchableOpacity>
+      </Pressable>
 
       <Pressable 
         onPress={() => navigation.navigate('Cadastro')}
@@ -105,50 +104,3 @@ export function Login() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    backgroundColor: '#FFF',
-    justifyContent: 'center',
-  },
-  logo: {
-    width: '100%',
-    height: 150,
-    marginBottom: 40,
-  },
-  inputContainer: {
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#000',
-  },
-  input: {
-    backgroundColor: '#D1C4E9', 
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#6A1B9A', 
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  registerText: {
-    textAlign: 'center',
-    color: '#666',
-    fontSize: 14,
-  }
-});

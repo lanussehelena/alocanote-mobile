@@ -3,7 +3,7 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
+  Pressable,
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
@@ -11,8 +11,8 @@ import {
   Image,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { api } from '../services/api';
-import { styles } from './TelaVerificacaoToken.styles';
+import { api } from '../../services/api';
+import { styles } from './TelaVerificacaoTokens.styles';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export function TelaVerificacaoToken() {
@@ -71,9 +71,9 @@ export function TelaVerificacaoToken() {
     try {
       // POST para o endpoint implementado no AuthController
       const resposta = await api.post('/auth/verify-sms', {
-  phone: telefone,
-  code: tokenCompleto,
-});
+        phone: telefone,
+        code: tokenCompleto,
+      });
 
       if (resposta.status === 200) {
         Alert.alert('Sucesso', 'Token validado com sucesso!', [
@@ -114,11 +114,11 @@ export function TelaVerificacaoToken() {
         style={styles.innerContainer}
       >
         <View style={styles.logoContainer}>
-         <Image
-          source={require('../../assets/logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-/>
+          <Image
+            source={require('../../../assets/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
 
         <Text style={styles.titulo}>Verificação{'\n'}de Token</Text>
@@ -156,9 +156,9 @@ export function TelaVerificacaoToken() {
           ))}
         </View>
 
-        <TouchableOpacity
+        <Pressable
           onPress={handleReenviarCodigo}
-          style={styles.botaoReenviar}
+          style={({ pressed }) => [styles.botaoReenviar, pressed && { opacity: 0.6 }]}
           disabled={reenviando}
         >
           {reenviando ? (
@@ -166,10 +166,14 @@ export function TelaVerificacaoToken() {
           ) : (
             <Text style={styles.textoReenviar}>Reenviar Código</Text>
           )}
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity
-          style={[styles.botaoConfirmar, carregando && styles.botaoDesativado]}
+        <Pressable
+          style={({ pressed }) => [
+            styles.botaoConfirmar,
+            carregando && styles.botaoDesativado,
+            pressed && { opacity: 0.85 },
+          ]}
           onPress={handleConfirmar}
           disabled={carregando}
         >
@@ -178,7 +182,7 @@ export function TelaVerificacaoToken() {
           ) : (
             <Text style={styles.textoConfirmar}>Confirmar</Text>
           )}
-        </TouchableOpacity>
+        </Pressable>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

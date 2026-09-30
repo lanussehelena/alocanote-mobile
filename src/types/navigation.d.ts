@@ -1,7 +1,7 @@
 export type AuthStackParamList = {
   Login: undefined;
   Cadastro: undefined;
-  VerificacaoToken: undefined;
+  VerificacaoToken: { telefone?: string } | undefined;
 };
 
 declare global {
