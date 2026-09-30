@@ -1,74 +1,166 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TextInput, ActivityIndicator, Pressable, Alert } from 'react-native';
-import { NotebookCard } from '../../components/NotebookCard/NotebookCard';
-import { Notebook } from '../../types';
-import { api } from '../../services/api';
+import React from 'react';
+import {
+  Text,
+  View,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  SafeAreaView,
+  StatusBar,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import {
+  Ionicons,
+  Feather,
+  MaterialCommunityIcons,
+} from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { styles } from './Home.styles';
 
-export function Home() {
-  const [notebooks, setNotebooks] = useState<Notebook[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const { signOut, user } = useAuth();
+interface HomeProps {
+  navigation?: any;
+}
 
-  useEffect(() => {
-    const fetchNotebooks = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get<Notebook[]>('/notebooks'); 
-        
-        setNotebooks(response.data);
-      } catch (error: any) {
-        console.error("Erro ao buscar notebooks:", error);
-        Alert.alert('Erro', 'Não foi possível carregar a lista de equipamentos.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNotebooks();
-  }, []);
-
-  const handleAgendar = (notebookId: number) => {
-    console.log(`Navegar para ecrã de Agendamento do notebook: ${notebookId}`);
-  };
+export function Home({ navigation }: HomeProps) {
+  const { user } = useAuth();
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.welcomeText}>Bem-vindo, {user?.name}!</Text>
-        <Pressable onPress={signOut} style={{ marginTop: 10 }}>
-          <Text style={styles.signOutText}>Sair da conta</Text>
-        </Pressable>
-      </View>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#4C1D95" />
 
-      <View style={styles.content}>
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Pesquisar..."
-            value={search}
-            onChangeText={setSearch}
-          />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Cabeçalho Curvo Roxo */}
+        <View style={styles.header}>
+          <View style={styles.headerTop}>
+            <View style={styles.greetingContainer}>
+              <Text style={styles.greetingTitle}>Bem-vindo,</Text>
+              <Text style={styles.greetingName}>
+                {user?.name || 'Tamires'}!
+              </Text>
+            </View>
+
+           <View style={styles.avatarBorder}>
+            <Image
+              source={{
+                uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300',
+              }}
+              style={styles.avatarImage}
+            />
+          </View>
         </View>
-
-        <Text style={styles.sectionTitle}>Selecionar Notebook</Text>
-
-        {loading ? (
-          <ActivityIndicator size="large" color="#4B0082" style={styles.loader} />
-        ) : (
-          <FlatList
-            data={notebooks}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <NotebookCard notebook={item} onAgendar={handleAgendar} />
-            )}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listContainer}
-          />
-        )}
       </View>
-    </View>
+
+        {/* Lista de Ações / Cards */}
+        <View style={styles.cardsContainer}>
+          {/* Card: Notebooks */}
+          <TouchableOpacity
+            style={styles.card}
+            activeOpacity={0.8}
+            onPress={() => navigation?.navigate('Notebooks')}
+          >
+            <LinearGradient
+              colors={['#7E22CE', '#9333EA']}
+              style={styles.cardIconBox}
+            >
+              <MaterialCommunityIcons name="laptop" size={32} color="#FFFFFF" />
+            </LinearGradient>
+
+            <View style={styles.cardTextBox}>
+              <Text style={styles.cardTitle}>Notebooks</Text>
+              <Text style={styles.cardSubtitle}>
+                Veja os notebooks disponíveis, faça sua reserva e confira as datas e horários.
+              </Text>
+            </View>
+
+            <View style={styles.actionArrowCircle}>
+              <Feather name="arrow-right" size={20} color="#FFFFFF" />
+            </View>
+          </TouchableOpacity>
+
+          {/* Card: Meu Perfil */}
+          <TouchableOpacity
+            style={styles.card}
+            activeOpacity={0.8}
+            onPress={() => navigation?.navigate('Perfil')}
+          >
+            <LinearGradient
+              colors={['#7E22CE', '#9333EA']}
+              style={styles.cardIconBox}
+            >
+              <Feather name="user" size={30} color="#FFFFFF" />
+            </LinearGradient>
+
+            <View style={styles.cardTextBox}>
+              <Text style={styles.cardTitle}>Meu Perfil</Text>
+              <Text style={styles.cardSubtitle}>
+                Edite sua foto de perfil, atualize seus dados e mantenha seu cadastro em dia.
+              </Text>
+            </View>
+
+            <View style={styles.actionArrowCircle}>
+              <Feather name="arrow-right" size={20} color="#FFFFFF" />
+            </View>
+          </TouchableOpacity>
+
+          {/* Card: Calendário */}
+          <TouchableOpacity
+            style={styles.card}
+            activeOpacity={0.8}
+            onPress={() => navigation?.navigate('Calendario')}
+          >
+            <LinearGradient
+              colors={['#7E22CE', '#9333EA']}
+              style={styles.cardIconBox}
+            >
+              <Ionicons name="calendar-outline" size={30} color="#FFFFFF" />
+            </LinearGradient>
+
+            <View style={styles.cardTextBox}>
+              <Text style={styles.cardTitle}>Calendário</Text>
+              <Text style={styles.cardSubtitle}>
+                Veja os agendamentos feitos, confira quais notebooks já foram reservados e os horários disponíveis.
+              </Text>
+            </View>
+
+            <View style={styles.actionArrowCircle}>
+              <Feather name="arrow-right" size={20} color="#FFFFFF" />
+            </View>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      {/* Menu Inferior */}
+      <View style={styles.bottomNavContainer}>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => navigation?.navigate('Perfil')}
+        >
+          <Feather name="user" size={28} color="#9CA3AF" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.floatingCenterButton}
+          activeOpacity={0.9}
+          onPress={() => navigation?.navigate('Notebooks')}
+        >
+          <LinearGradient
+            colors={['#C084FC', '#7E22CE']}
+            style={styles.floatingGradient}
+          >
+            <MaterialCommunityIcons name="laptop" size={28} color="#FFFFFF" />
+          </LinearGradient>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => navigation?.navigate('Calendario')}
+        >
+          <Ionicons name="calendar-outline" size={28} color="#9CA3AF" />
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
