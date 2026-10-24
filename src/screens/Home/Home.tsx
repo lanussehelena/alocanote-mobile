@@ -6,7 +6,6 @@ import {
   Image,
   ScrollView,
   SafeAreaView,
-  StatusBar,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -27,6 +26,7 @@ export function Home({ navigation }: HomeProps) {
   const insets = useSafeAreaInsets();
 
   const primeiroNome = user?.name ? user.name.trim().split(' ')[0] : 'Colaborador';
+  const isAdmin = user?.role === 'ADMINISTRADOR';
 
   const handleOpenNotebooks = () => {
     navigation?.navigate('MainTabs', { screen: 'Notebooks' });
@@ -40,10 +40,12 @@ export function Home({ navigation }: HomeProps) {
     navigation?.navigate('Perfil');
   };
 
+  const handleOpenUsuarios = () => {
+    navigation?.navigate('Usuarios');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#4C1D95" />
-
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -77,6 +79,32 @@ export function Home({ navigation }: HomeProps) {
 
         {/* Lista de Ações / Cards */}
         <View style={styles.cardsContainer}>
+          {/* Card Especial Admin: Gestão de Usuários */}
+          {isAdmin && (
+            <Pressable
+              style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
+              onPress={handleOpenUsuarios}
+            >
+              <LinearGradient
+                colors={['#7E22CE', '#9333EA']}
+                style={styles.cardIconBox}
+              >
+                <Feather name="users" size={30} color="#FFFFFF" />
+              </LinearGradient>
+
+              <View style={styles.cardTextBox}>
+                <Text style={styles.cardTitle}>Gestão de Usuários</Text>
+                <Text style={styles.cardSubtitle}>
+                  Controle master: adicione ou remova colaboradores e altere permissões da equipe.
+                </Text>
+              </View>
+
+              <View style={styles.actionArrowCircle}>
+                <Feather name="arrow-right" size={20} color="#FFFFFF" />
+              </View>
+            </Pressable>
+          )}
+
           {/* Card: Notebooks */}
           <Pressable
             style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
@@ -92,7 +120,9 @@ export function Home({ navigation }: HomeProps) {
             <View style={styles.cardTextBox}>
               <Text style={styles.cardTitle}>Notebooks</Text>
               <Text style={styles.cardSubtitle}>
-                Veja os notebooks disponíveis, faça sua reserva e confira as datas e horários.
+                {isAdmin
+                  ? 'Cadastre novos notebooks, altere estados de manutenção ou remova equipamentos.'
+                  : 'Veja os notebooks disponíveis, faça sua reserva e confira as datas e horários.'}
               </Text>
             </View>
 
@@ -125,7 +155,7 @@ export function Home({ navigation }: HomeProps) {
             </View>
           </Pressable>
 
-          {/* Card: Calendário */}
+          {/* Card: Calendário / Reservas */}
           <Pressable
             style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
             onPress={handleOpenReservas}
@@ -138,9 +168,13 @@ export function Home({ navigation }: HomeProps) {
             </LinearGradient>
 
             <View style={styles.cardTextBox}>
-              <Text style={styles.cardTitle}>Calendário</Text>
+              <Text style={styles.cardTitle}>
+                {isAdmin ? 'Gestão de Reservas' : 'Calendário'}
+              </Text>
               <Text style={styles.cardSubtitle}>
-                Veja os agendamentos feitos, confira quais notebooks já foram reservados e os horários disponíveis.
+                {isAdmin
+                  ? 'Visualize, libere, cancele ou exclua agendamentos de qualquer colaborador.'
+                  : 'Veja os agendamentos feitos, confira quais notebooks já foram reservados e os horários disponíveis.'}
               </Text>
             </View>
 
