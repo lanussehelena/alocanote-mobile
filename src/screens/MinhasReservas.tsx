@@ -20,6 +20,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../contexts/AuthContext';
 import { reservationService } from '../services/reservationService';
 import { getApiErrorMessage } from '../services/api';
 import { ReservationResponseDTO, ReservationStatus } from '../types';
@@ -66,6 +67,8 @@ export function MinhasReservas() {
 
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMINISTRADOR';
 
   const carregarReservas = useCallback(async () => {
     try {
@@ -619,6 +622,33 @@ export function MinhasReservas() {
     }
   };
 
+    const handleExcluirReserva = (reservaId: number) => {
+    Alert.alert(
+      'Excluir Reserva',
+      'Tem certeza de que deseja excluir permanentemente esta reserva? Essa ação é irreversível.',
+      [
+        { text: 'Não', style: 'cancel' },
+        {
+          text: 'Sim, excluir',
+          style: 'destructive',
+          onPress: async () => {
+            setLoadingActionId(reservaId);
+            try {
+              await reservationService.deleteReservation(reservaId);
+              Alert.alert('Sucesso', 'Registro de reserva excluído com sucesso.');
+              await carregarReservas();
+            } catch (error) {
+              const mensagem = getApiErrorMessage(error, 'Não foi possível excluir a reserva.');
+              Alert.alert('Falha', mensagem);
+            } finally {
+              setLoadingActionId(null);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const handleCancelar = async (reservaId: number) => {
     Alert.alert(
       'Cancelar Reserva',
@@ -714,6 +744,13 @@ export function MinhasReservas() {
         </View>
 
         <Text style={styles.modelDescription}>{item.notebookModel}</Text>
+
+        {isAdmin && item.userName ? (
+          <View style={styles.adminUserBadgeRow}>
+            <Text style={styles.adminUserBadgeLabel}>👤 Solicitante:</Text>
+            <Text style={styles.adminUserBadgeName}>{item.userName}</Text>
+          </View>
+        ) : null}
 
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Início:</Text>
@@ -888,10 +925,14 @@ export function MinhasReservas() {
           >
             <Text style={styles.backButtonText}>← Início</Text>
           </Pressable>
-          <Text style={styles.headerTitle}>Minhas Reservas</Text>
+          <Text style={styles.headerTitle}>{isAdmin ? 'Gestão de Reservas' : 'Minhas Reservas'}</Text>
           <View style={{ width: 60 }} />
         </View>
-        <Text style={styles.headerSubtitle}>Acompanhamento, check-in e devoluções</Text>
+        <Text style={styles.headerSubtitle}>
+          {isAdmin
+            ? 'Visualização master de todas as reservas da empresa'
+            : 'Acompanhamento, check-in e devoluções'}
+        </Text>
       </View>
 
       {isLoading ? (
@@ -925,7 +966,9 @@ export function MinhasReservas() {
         visible={checkInModalVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => !isSubmittingCheckIn && setCheckInModalVisible(false)}
+        onRequestClose={() => {
+          if (!isSubmittingCheckIn) setCheckInModalVisible(false);
+        }}
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -1111,7 +1154,9 @@ export function MinhasReservas() {
         visible={returnModalVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => !isSubmittingReturn && setReturnModalVisible(false)}
+        onRequestClose={() => {
+          if (!isSubmittingReturn) setReturnModalVisible(false);
+        }}
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -1923,5 +1968,48 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  adminUserBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3E8FF',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginTop: 4,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#D8B4FE',
+    gap: 6,
+  },
+  adminUserBadgeLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6B21A8',
+  },
+  adminUserBadgeName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1E293B',
+  },
+  adminDeleteBtn: {
+    marginTop: 10,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  adminDeleteBtnPressed: {
+    backgroundColor: '#FEE2E2',
+  },
+  adminDeleteBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#DC2626',
   },
 });
