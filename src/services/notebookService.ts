@@ -16,4 +16,13 @@ export const notebookService = {
     const response = await api.post<NotebookResponseDTO>('/notebooks', data);
     return response.data;
   },
+
+  async updateNotebook(id: number, data: CreateNotebookRequestDTO): Promise<NotebookResponseDTO> {
+    const response = await api.put<NotebookResponseDTO>(`/notebooks/${id}`, data);
+    return response.data;
+  },
+
+  async deleteNotebook(id: number): Promise<void> {
+    await api.delete(`/notebooks/${id}`);
+  },
 };

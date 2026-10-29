@@ -17,6 +17,7 @@ export type AppStackParamList = {
   Calendario: undefined;
   Perfil: undefined;
   DetalhesReserva?: { reservationId: number };
+  Usuarios: undefined;
 };
 
 export type RootStackParamList = AuthStackParamList & AppStackParamList & {

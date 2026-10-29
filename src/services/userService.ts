@@ -1,5 +1,5 @@
 import { api } from './api';
-import { UpdateUserProfileRequestDTO, UserResponseDTO } from '../types';
+import { RegisterUserRequestDTO, UpdateUserProfileRequestDTO, UserResponseDTO } from '../types';
 
 export const userService = {
   async listUsers(): Promise<UserResponseDTO[]> {
@@ -15,5 +15,19 @@ export const userService = {
   async updateMyProfile(data: UpdateUserProfileRequestDTO): Promise<UserResponseDTO> {
     const response = await api.put<UserResponseDTO>('/users/me', data);
     return response.data;
+  },
+
+  async createUser(data: RegisterUserRequestDTO): Promise<UserResponseDTO> {
+    const response = await api.post<UserResponseDTO>('/users', data);
+    return response.data;
+  },
+
+  async updateUser(id: number, data: UpdateUserProfileRequestDTO): Promise<UserResponseDTO> {
+    const response = await api.put<UserResponseDTO>(`/users/${id}`, data);
+    return response.data;
+  },
+
+  async deleteUser(id: number): Promise<void> {
+    await api.delete(`/users/${id}`);
   },
 };

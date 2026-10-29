@@ -17,6 +17,11 @@ export const reservationService = {
     return response.data;
   },
 
+  async listAllReservations(): Promise<ReservationResponseDTO[]> {
+    const response = await api.get<ReservationResponseDTO[]>('/reservations/all');
+    return response.data;
+  },
+
   async getReservationById(id: number): Promise<ReservationResponseDTO> {
     const response = await api.get<ReservationResponseDTO>(`/reservations/${id}`);
     return response.data;
@@ -41,5 +46,9 @@ export const reservationService = {
   ): Promise<ReservationResponseDTO> {
     const response = await api.patch<ReservationResponseDTO>(`/reservations/${id}/finish`, data);
     return response.data;
+  },
+
+  async deleteReservation(id: number): Promise<void> {
+    await api.delete(`/reservations/${id}`);
   },
 };

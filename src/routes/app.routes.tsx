@@ -7,6 +7,7 @@ import { Notebooks } from '../screens/Notebooks';
 import { MinhasReservas } from '../screens/MinhasReservas';
 import { NovaReserva } from '../screens/NovaReserva';
 import { Perfil } from '../screens/Perfil/Perfil';
+import { Usuarios } from '../screens/Usuarios/Usuarios';
 import { AppStackParamList, AppTabParamList } from '../types/navigation';
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
@@ -103,6 +104,11 @@ export function AppRoutes() {
       <Stack.Screen
         name="Perfil"
         component={Perfil}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Usuarios"
+        component={Usuarios}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
