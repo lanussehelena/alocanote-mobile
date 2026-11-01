@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 import { NativeModules, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -41,12 +41,20 @@ function getExpoBundleHost(): string | null {
 }
 
 export function resolveApiBaseUrl(): string {
+  const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
+
+  // 1. Se a URL configurada for de produção na nuvem (HTTPS), usa diretamente sem sobrescrever por IP local
+  if (envUrl && envUrl.startsWith('https://')) {
+    return envUrl;
+  }
+
+  // 2. Se estiver rodando via Expo Go no celular/emulador na mesma rede local
   const liveExpoHost = getExpoBundleHost();
   if (liveExpoHost) {
     return `http://${liveExpoHost}:${BACKEND_PORT}`;
   }
 
-  const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
+  // 3. Se houver URL configurada no .env (ex: IP local)
   if (envUrl) {
     const normalizedPortUrl = envUrl.replace(':8081', `:${BACKEND_PORT}`);
     if (normalizedPortUrl.includes('172.20.10.3')) {
@@ -55,6 +63,7 @@ export function resolveApiBaseUrl(): string {
     return normalizedPortUrl;
   }
 
+  // 4. IP fallback padrão
   return `http://${FALLBACK_LAN_IP}:${BACKEND_PORT}`;
 }
 
