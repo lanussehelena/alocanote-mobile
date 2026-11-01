@@ -106,6 +106,16 @@ export function Cadastro() {
         customRole: cargoSelecionado.chave === Role.OUTROS ? outroCargo.trim() : null,
       });
 
+      if (Platform.OS === 'web') {
+        window.alert('Conta criada com sucesso! Redirecionando...');
+        try {
+          await signIn({ email: emailLimpo, password: senhaLimpa });
+        } catch {
+          navigation.navigate('Login', { email: emailLimpo });
+        }
+        return;
+      }
+
       Alert.alert(
         'Conta Criada com Sucesso!',
         'Seu cadastro foi realizado. Um e-mail de confirmação foi enviado para o seu endereço.',
@@ -123,6 +133,7 @@ export function Cadastro() {
         ]
       );
     } catch (error: any) {
+      console.error('Erro ao cadastrar usuário:', error);
       const mensagem = getApiErrorMessage(error, 'Não foi possível realizar o cadastro.');
       Alert.alert('Erro no Cadastro', mensagem);
     } finally {

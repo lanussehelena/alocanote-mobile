@@ -52,6 +52,7 @@ export function Login() {
         password,
       });
     } catch (error) {
+      console.error('Erro no login:', error);
       const mensagem = getApiErrorMessage(
         error,
         'Credenciais inválidas ou não foi possível conectar ao servidor.'
