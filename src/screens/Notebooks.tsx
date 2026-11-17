@@ -11,6 +11,7 @@ import {
   Modal,
   TextInput,
   ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -41,6 +42,8 @@ export function Notebooks() {
   const navigation = useNavigation<NotebooksNavProp>();
   const { user, signOut } = useAuth();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const isAdmin = user?.role === 'ADMINISTRADOR';
 
   const carregarNotebooks = useCallback(async () => {
@@ -170,7 +173,7 @@ export function Notebooks() {
     const isDisponivel = item.status === NotebookStatus.DISPONIVEL;
 
     return (
-      <View style={styles.card}>
+      <View style={[styles.card, isDesktop && styles.cardDesktop]}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>{item.name}</Text>
           <View style={[styles.badge, { backgroundColor: getStatusColor(item.status) + '1A' }]}>
@@ -267,9 +270,12 @@ export function Notebooks() {
         </View>
       ) : (
         <FlatList
+          key={isDesktop ? 'notebooks-desktop' : 'notebooks-mobile'}
           data={notebooks}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
+          numColumns={isDesktop ? 2 : 1}
+          columnWrapperStyle={isDesktop ? styles.columnWrapper : undefined}
           contentContainerStyle={[styles.listContent, { paddingBottom: 85 + insets.bottom }]}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -395,6 +401,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 6,
+    width: '100%',
+    maxWidth: 960,
+    alignSelf: 'center',
   },
   backButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -456,6 +465,13 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
+    width: '100%',
+    maxWidth: 960,
+    alignSelf: 'center',
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    gap: 14,
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -469,6 +485,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.06,
     shadowRadius: 6,
+  },
+  cardDesktop: {
+    flex: 1,
+    maxWidth: '48.8%',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -594,6 +614,9 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContainer: {
+    width: '100%',
+    maxWidth: 500,
+    alignSelf: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,

@@ -1,13 +1,36 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
+  screenWrapper: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  screenWrapperDesktop: {
+    backgroundColor: '#F8F6FD',
+  },
   container: {
     paddingHorizontal: 24,
     paddingTop: 36,
     paddingBottom: 24,
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
     flexGrow: 1,
+  },
+  contentBox: {
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
+  },
+  contentBoxDesktop: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 36,
+    borderWidth: 1.5,
+    borderColor: '#E9D5FF',
+    shadowColor: '#4B0082',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 6,
   },
   title: {
     fontSize: 26,
@@ -159,6 +182,8 @@ export const styles = StyleSheet.create({
   },
   modalContent: {
     width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,

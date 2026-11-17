@@ -17,6 +17,9 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 12,
+    width: '100%',
+    maxWidth: 680,
+    alignSelf: 'center',
   },
   backButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -129,6 +132,9 @@ export const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
+    width: '100%',
+    maxWidth: 680,
+    alignSelf: 'center',
   },
   sectionCard: {
     backgroundColor: '#FFFFFF',
@@ -330,6 +336,8 @@ export const styles = StyleSheet.create({
   },
   modalContent: {
     width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,

@@ -40,6 +40,8 @@ export const styles = StyleSheet.create({
   },
   modalContent: {
     width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,

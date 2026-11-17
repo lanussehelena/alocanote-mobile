@@ -6,6 +6,7 @@ import {
   Image,
   ScrollView,
   SafeAreaView,
+  useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -24,6 +25,8 @@ interface HomeProps {
 export function Home({ navigation }: HomeProps) {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
 
   const primeiroNome = user?.name ? user.name.trim().split(' ')[0] : 'Colaborador';
   const isAdmin = user?.role === 'ADMINISTRADOR';
@@ -78,11 +81,15 @@ export function Home({ navigation }: HomeProps) {
         </View>
 
         {/* Lista de Ações / Cards */}
-        <View style={styles.cardsContainer}>
+        <View style={[styles.cardsContainer, isDesktop && styles.cardsContainerDesktop]}>
           {/* Card Especial Admin: Gestão de Usuários */}
           {isAdmin && (
             <Pressable
-              style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
+              style={({ pressed }) => [
+                styles.card,
+                isDesktop && styles.cardDesktop,
+                pressed && { opacity: 0.85 },
+              ]}
               onPress={handleOpenUsuarios}
             >
               <LinearGradient
@@ -107,7 +114,11 @@ export function Home({ navigation }: HomeProps) {
 
           {/* Card: Notebooks */}
           <Pressable
-            style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
+            style={({ pressed }) => [
+              styles.card,
+              isDesktop && styles.cardDesktop,
+              pressed && { opacity: 0.85 },
+            ]}
             onPress={handleOpenNotebooks}
           >
             <LinearGradient
@@ -133,7 +144,11 @@ export function Home({ navigation }: HomeProps) {
 
           {/* Card: Meu Perfil */}
           <Pressable
-            style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
+            style={({ pressed }) => [
+              styles.card,
+              isDesktop && styles.cardDesktop,
+              pressed && { opacity: 0.85 },
+            ]}
             onPress={handleOpenPerfil}
           >
             <LinearGradient
@@ -157,7 +172,11 @@ export function Home({ navigation }: HomeProps) {
 
           {/* Card: Calendário / Reservas */}
           <Pressable
-            style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
+            style={({ pressed }) => [
+              styles.card,
+              isDesktop && styles.cardDesktop,
+              pressed && { opacity: 0.85 },
+            ]}
             onPress={handleOpenReservas}
           >
             <LinearGradient
@@ -189,6 +208,7 @@ export function Home({ navigation }: HomeProps) {
       <View
         style={[
           styles.bottomNavContainer,
+          isDesktop && styles.bottomNavContainerDesktop,
           {
             height: 70 + insets.bottom,
             paddingBottom: insets.bottom,

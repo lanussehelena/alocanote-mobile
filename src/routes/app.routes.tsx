@@ -1,4 +1,5 @@
 import React from 'react';
+import { useWindowDimensions } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
@@ -14,6 +15,9 @@ const Tab = createBottomTabNavigator<AppTabParamList>();
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 function AppTabs() {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -32,6 +36,18 @@ function AppTabs() {
           height: 62,
           paddingBottom: 8,
           paddingTop: 6,
+          ...(isDesktop
+            ? {
+                maxWidth: 640,
+                width: '100%',
+                alignSelf: 'center',
+                borderTopLeftRadius: 20,
+                borderTopRightRadius: 20,
+                borderLeftWidth: 1,
+                borderRightWidth: 1,
+                borderColor: '#E9D5FF',
+              }
+            : {}),
         },
         tabBarLabelStyle: {
           fontSize: 12,
