@@ -17,7 +17,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { userService } from '../../services/userService';
-import { getApiErrorMessage } from '../../services/api';
+import { getApiErrorMessage, isUnauthorizedError } from '../../services/api';
 import { UserResponseDTO, Role, RegisterUserRequestDTO } from '../../types';
 import { AppStackParamList } from '../../types/navigation';
 import { useAuth } from '../../contexts/AuthContext';
@@ -53,6 +53,7 @@ export function Usuarios() {
       const dados = await userService.listUsers();
       setUsuarios(dados);
     } catch (error) {
+      if (isUnauthorizedError(error)) return;
       const mensagem = getApiErrorMessage(error, 'Erro ao carregar colaboradores.');
       Alert.alert('Erro', mensagem);
     } finally {

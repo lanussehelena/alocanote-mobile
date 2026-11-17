@@ -17,7 +17,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { notebookService } from '../services/notebookService';
-import { getApiErrorMessage } from '../services/api';
+import { getApiErrorMessage, isUnauthorizedError } from '../services/api';
 import { NotebookResponseDTO, NotebookStatus, CreateNotebookRequestDTO } from '../types';
 import { AppStackParamList } from '../types/navigation';
 import { useAuth } from '../contexts/AuthContext';
@@ -48,6 +48,7 @@ export function Notebooks() {
       const dados = await notebookService.listNotebooks();
       setNotebooks(dados);
     } catch (error) {
+      if (isUnauthorizedError(error)) return;
       const mensagem = getApiErrorMessage(error, 'Erro ao carregar notebooks.');
       Alert.alert('Erro', mensagem);
     } finally {
