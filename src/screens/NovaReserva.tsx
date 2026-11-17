@@ -18,7 +18,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { notebookService } from '../services/notebookService';
 import { reservationService } from '../services/reservationService';
-import { getApiErrorMessage } from '../services/api';
+import { getApiErrorMessage, isUnauthorizedError } from '../services/api';
 import { NotebookResponseDTO, NotebookStatus } from '../types';
 import { AppStackParamList } from '../types/navigation';
 import { PrimaryButton } from '../components/PrimaryButton/PrimaryButton';
@@ -75,6 +75,7 @@ export function NovaReserva() {
         setDataInicio(dataPadrao);
         setDataTermino(dataPadrao);
       } catch (error) {
+        if (isUnauthorizedError(error)) return;
         const mensagem = getApiErrorMessage(error, 'Erro ao carregar dados para a reserva.');
         Alert.alert('Erro', mensagem);
       } finally {

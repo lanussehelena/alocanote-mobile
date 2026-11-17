@@ -22,7 +22,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { reservationService } from '../services/reservationService';
-import { getApiErrorMessage } from '../services/api';
+import { getApiErrorMessage, isUnauthorizedError } from '../services/api';
 import { ReservationResponseDTO, ReservationStatus } from '../types';
 
 type LocationOptionType = 'LOJA' | 'OUTRO_LOCAL';
@@ -67,7 +67,7 @@ export function MinhasReservas() {
 
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const isAdmin = user?.role === 'ADMINISTRADOR';
 
   const carregarReservas = useCallback(async () => {
@@ -76,6 +76,7 @@ export function MinhasReservas() {
       const ordenadas = [...dados].sort((a, b) => b.id - a.id);
       setReservas(ordenadas);
     } catch (error) {
+      if (isUnauthorizedError(error)) return;
       const mensagem = getApiErrorMessage(error, 'Erro ao buscar suas reservas.');
       Alert.alert('Erro', mensagem);
     } finally {
@@ -926,7 +927,15 @@ export function MinhasReservas() {
             <Text style={styles.backButtonText}>← Início</Text>
           </Pressable>
           <Text style={styles.headerTitle}>{isAdmin ? 'Gestão de Reservas' : 'Minhas Reservas'}</Text>
-          <View style={{ width: 60 }} />
+          <Pressable
+            style={({ pressed }) => [
+              styles.backButton,
+              pressed && styles.backButtonPressed,
+            ]}
+            onPress={signOut}
+          >
+            <Text style={styles.backButtonText}>Sair</Text>
+          </Pressable>
         </View>
         <Text style={styles.headerSubtitle}>
           {isAdmin

@@ -1,6 +1,15 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { api, setAuthToken, TOKEN_STORAGE_KEY, USER_STORAGE_KEY } from '../services/api';
+import {
+  api,
+  setAuthToken,
+  setOnUnauthorizedCallback,
+  isJwtTokenValid,
+  isUnauthorizedError,
+  clearStoredAuthSession,
+  TOKEN_STORAGE_KEY,
+  USER_STORAGE_KEY,
+} from '../services/api';
 import { authService, GoogleSignInParams } from '../services/authService';
 import { userService } from '../services/userService';
 import { LoginRequestDTO, LoginResponseDTO } from '../types';
@@ -41,7 +50,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
-  const refreshUserProfile = async (): Promise<AuthUser | null> => {
+  const signOut = useCallback(async () => {
+    setAuthToken(null);
+    await clearStoredAuthSession();
+    setToken(null);
+    setUser(null);
+  }, []);
+
+  useEffect(() => {
+    setOnUnauthorizedCallback(() => {
+      signOut();
+    });
+    return () => {
+      setOnUnauthorizedCallback(null);
+    };
+  }, [signOut]);
+
+  const refreshUserProfile = useCallback(async (): Promise<AuthUser | null> => {
     try {
       const profile = await userService.getMyProfile();
       const updated: AuthUser = {
@@ -65,10 +90,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         AsyncStorage.setItem('@AlocaNote:user', JSON.stringify(updated)),
       ]);
       return updated;
-    } catch {
+    } catch (error) {
+      if (isUnauthorizedError(error)) {
+        await signOut();
+      }
       return null;
     }
-  };
+  }, [signOut]);
 
   useEffect(() => {
     async function loadStorageData() {
@@ -78,40 +106,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           AsyncStorage.getItem(USER_STORAGE_KEY),
         ]);
 
-        if (storedToken && storedUser) {
-          setAuthToken(storedToken);
-          api.defaults.headers.Authorization = `Bearer ${storedToken}`;
-          setToken(storedToken);
-          setUser(JSON.parse(storedUser));
-          refreshUserProfile();
-        } else {
-          const fallbackToken = await AsyncStorage.getItem('@AlocaNote:token');
-          const fallbackUser = await AsyncStorage.getItem('@AlocaNote:user');
-          if (fallbackToken && fallbackUser) {
-            setAuthToken(fallbackToken);
-            api.defaults.headers.Authorization = `Bearer ${fallbackToken}`;
-            setToken(fallbackToken);
-            setUser(JSON.parse(fallbackUser));
-            refreshUserProfile();
+        let activeToken = storedToken;
+        let activeUserRaw = storedUser;
+
+        if (!activeToken || !activeUserRaw) {
+          activeToken = await AsyncStorage.getItem('@AlocaNote:token');
+          activeUserRaw = await AsyncStorage.getItem('@AlocaNote:user');
+        }
+
+        if (activeToken && activeUserRaw) {
+          if (!isJwtTokenValid(activeToken)) {
+            await signOut();
+            return;
           }
+
+          const cleanToken = activeToken.trim();
+          setAuthToken(cleanToken);
+          api.defaults.headers.Authorization = `Bearer ${cleanToken}`;
+          setToken(cleanToken);
+          setUser(JSON.parse(activeUserRaw));
+          await refreshUserProfile();
         }
       } catch (error) {
         console.error('Falha ao restaurar autenticação:', error);
+        await signOut();
       } finally {
         setIsLoadingAuth(false);
       }
     }
 
     loadStorageData();
-  }, []);
+  }, [refreshUserProfile, signOut]);
 
   const persistAuthSession = async (data: LoginResponseDTO): Promise<LoginResponseDTO> => {
-    setAuthToken(data.token);
-    api.defaults.headers.Authorization = `Bearer ${data.token}`;
+    const cleanToken = data.token?.trim() || '';
+    setAuthToken(cleanToken);
+    api.defaults.headers.Authorization = `Bearer ${cleanToken}`;
 
     await Promise.all([
-      AsyncStorage.setItem(TOKEN_STORAGE_KEY, data.token),
-      AsyncStorage.setItem('@AlocaNote:token', data.token),
+      AsyncStorage.setItem(TOKEN_STORAGE_KEY, cleanToken),
+      AsyncStorage.setItem('@AlocaNote:token', cleanToken),
     ]);
 
     let authUser: AuthUser = {
@@ -146,7 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       AsyncStorage.setItem('@AlocaNote:user', JSON.stringify(authUser)),
     ]);
 
-    setToken(data.token);
+    setToken(cleanToken);
     setUser(authUser);
     return data;
   };
@@ -159,19 +193,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = async (params?: GoogleSignInParams): Promise<LoginResponseDTO> => {
     const data = await authService.authenticateWithGoogle(params);
     return persistAuthSession(data);
-  };
-
-  const signOut = async () => {
-    setAuthToken(null);
-    delete api.defaults.headers.Authorization;
-    await Promise.all([
-      AsyncStorage.removeItem(TOKEN_STORAGE_KEY),
-      AsyncStorage.removeItem(USER_STORAGE_KEY),
-      AsyncStorage.removeItem('@AlocaNote:token'),
-      AsyncStorage.removeItem('@AlocaNote:user'),
-    ]);
-    setToken(null);
-    setUser(null);
   };
 
   return (
