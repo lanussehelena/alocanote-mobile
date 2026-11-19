@@ -11,6 +11,7 @@ import {
   Modal,
   TextInput,
   ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -47,6 +48,8 @@ export function Usuarios() {
   const navigation = useNavigation<UsuariosNavProp>();
   const { user: currentUser } = useAuth();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
 
   const carregarUsuarios = useCallback(async () => {
     try {
@@ -197,7 +200,7 @@ export function Usuarios() {
     const isMaster = item.email.toLowerCase() === 'admin@alocanote.com';
 
     return (
-      <View style={styles.card}>
+      <View style={[styles.card, isDesktop && styles.cardDesktop]}>
         <View style={styles.cardHeader}>
           <View style={styles.avatarPlaceholder}>
             <Text style={styles.avatarText}>
@@ -314,9 +317,12 @@ export function Usuarios() {
         </View>
       ) : (
         <FlatList
+          key={isDesktop ? 'usuarios-desktop' : 'usuarios-mobile'}
           data={usuariosFiltrados}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderUsuarioItem}
+          numColumns={isDesktop ? 2 : 1}
+          columnWrapperStyle={isDesktop ? styles.columnWrapper : undefined}
           contentContainerStyle={[
             styles.listContent,
             { paddingBottom: 85 + insets.bottom },
@@ -520,6 +526,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 6,
+    width: '100%',
+    maxWidth: 960,
+    alignSelf: 'center',
   },
   backButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -574,6 +583,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     marginTop: 4,
+    width: '100%',
+    maxWidth: 960,
+    alignSelf: 'center',
   },
   searchInput: {
     flex: 1,
@@ -593,6 +605,13 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
+    width: '100%',
+    maxWidth: 960,
+    alignSelf: 'center',
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    gap: 14,
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -606,6 +625,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
+  },
+  cardDesktop: {
+    flex: 1,
+    maxWidth: '48.8%',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -715,6 +738,9 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContainer: {
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,

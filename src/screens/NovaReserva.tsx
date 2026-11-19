@@ -12,6 +12,7 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -30,6 +31,8 @@ export function NovaReserva() {
   const navigation = useNavigation<NovaReservaNavProp>();
   const route = useRoute<NovaReservaRouteProp>();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
 
   const preSelectedNotebookId = route.params?.notebookId;
 
@@ -221,7 +224,7 @@ export function NovaReserva() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={{ flex: 1, backgroundColor: '#FFFFFF' }}
+      style={{ flex: 1, backgroundColor: '#F8F6FD' }}
     >
       <ScrollView
         contentContainerStyle={[
@@ -230,104 +233,106 @@ export function NovaReserva() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Nova Reserva</Text>
-        <Text style={styles.subtitle}>
-          Selecione o equipamento, datas e finalidade do uso (o local de retirada será confirmado no check-in)
-        </Text>
+        <View style={[styles.contentBox, isDesktop && styles.contentBoxDesktop]}>
+          <Text style={styles.title}>Nova Reserva</Text>
+          <Text style={styles.subtitle}>
+            Selecione o equipamento, datas e finalidade do uso (o local de retirada será confirmado no check-in)
+          </Text>
 
-        {/* Seleção de Notebook */}
-        <View style={styles.fieldBlock}>
-          <Text style={styles.label}>Notebook</Text>
-          <Pressable
-            style={({ pressed }) => [styles.selectBox, pressed && styles.selectBoxPressed]}
-            onPress={() => setModalNotebookVisible(true)}
-          >
-            <Text style={styles.selectText}>
-              {selectedNotebook
-                ? `${selectedNotebook.name} (${selectedNotebook.modelDescription})`
-                : 'Nenhum notebook disponível'}
-            </Text>
-            <Text style={styles.arrowText}>▼</Text>
-          </Pressable>
-        </View>
+          {/* Seleção de Notebook */}
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>Notebook</Text>
+            <Pressable
+              style={({ pressed }) => [styles.selectBox, pressed && styles.selectBoxPressed]}
+              onPress={() => setModalNotebookVisible(true)}
+            >
+              <Text style={styles.selectText}>
+                {selectedNotebook
+                  ? `${selectedNotebook.name} (${selectedNotebook.modelDescription})`
+                  : 'Nenhum notebook disponível'}
+              </Text>
+              <Text style={styles.arrowText}>▼</Text>
+            </Pressable>
+          </View>
 
-        {/* Data e Hora de Início */}
-        <View style={styles.row}>
-          <View style={[styles.fieldBlock, { flex: 1.2, marginRight: 10 }]}>
-            <Text style={styles.label}>Data de Início</Text>
+          {/* Data e Hora de Início */}
+          <View style={styles.row}>
+            <View style={[styles.fieldBlock, { flex: 1.2, marginRight: 10 }]}>
+              <Text style={styles.label}>Data de Início</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="DD/MM/AAAA"
+                placeholderTextColor="#7E758C"
+                value={dataInicio}
+                onChangeText={(texto) => setDataInicio(formatarData(texto))}
+                keyboardType="numeric"
+                maxLength={10}
+              />
+            </View>
+
+            <View style={[styles.fieldBlock, { flex: 0.8 }]}>
+              <Text style={styles.label}>Hora Início</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="09:00"
+                placeholderTextColor="#7E758C"
+                value={horaInicio}
+                onChangeText={(texto) => setHoraInicio(formatarHora(texto))}
+                keyboardType="numeric"
+                maxLength={5}
+              />
+            </View>
+          </View>
+
+          {/* Data e Hora de Término */}
+          <View style={styles.row}>
+            <View style={[styles.fieldBlock, { flex: 1.2, marginRight: 10 }]}>
+              <Text style={styles.label}>Data de Término</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="DD/MM/AAAA"
+                placeholderTextColor="#7E758C"
+                value={dataTermino}
+                onChangeText={(texto) => setDataTermino(formatarData(texto))}
+                keyboardType="numeric"
+                maxLength={10}
+              />
+            </View>
+
+            <View style={[styles.fieldBlock, { flex: 0.8 }]}>
+              <Text style={styles.label}>Hora Término</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="12:00"
+                placeholderTextColor="#7E758C"
+                value={horaTermino}
+                onChangeText={(texto) => setHoraTermino(formatarHora(texto))}
+                keyboardType="numeric"
+                maxLength={5}
+              />
+            </View>
+          </View>
+
+          {/* Motivo do Uso */}
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>Finalidade / Motivo</Text>
             <TextInput
-              style={styles.input}
-              placeholder="DD/MM/AAAA"
+              style={[styles.input, styles.textArea]}
+              placeholder="Ex: Apresentação de projeto de móveis para cliente"
               placeholderTextColor="#7E758C"
-              value={dataInicio}
-              onChangeText={(texto) => setDataInicio(formatarData(texto))}
-              keyboardType="numeric"
-              maxLength={10}
+              value={purpose}
+              onChangeText={setPurpose}
+              multiline
+              numberOfLines={3}
             />
           </View>
 
-          <View style={[styles.fieldBlock, { flex: 0.8 }]}>
-            <Text style={styles.label}>Hora Início</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="09:00"
-              placeholderTextColor="#7E758C"
-              value={horaInicio}
-              onChangeText={(texto) => setHoraInicio(formatarHora(texto))}
-              keyboardType="numeric"
-              maxLength={5}
-            />
-          </View>
-        </View>
-
-        {/* Data e Hora de Término */}
-        <View style={styles.row}>
-          <View style={[styles.fieldBlock, { flex: 1.2, marginRight: 10 }]}>
-            <Text style={styles.label}>Data de Término</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="DD/MM/AAAA"
-              placeholderTextColor="#7E758C"
-              value={dataTermino}
-              onChangeText={(texto) => setDataTermino(formatarData(texto))}
-              keyboardType="numeric"
-              maxLength={10}
-            />
-          </View>
-
-          <View style={[styles.fieldBlock, { flex: 0.8 }]}>
-            <Text style={styles.label}>Hora Término</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="12:00"
-              placeholderTextColor="#7E758C"
-              value={horaTermino}
-              onChangeText={(texto) => setHoraTermino(formatarHora(texto))}
-              keyboardType="numeric"
-              maxLength={5}
-            />
-          </View>
-        </View>
-
-        {/* Motivo do Uso */}
-        <View style={styles.fieldBlock}>
-          <Text style={styles.label}>Finalidade / Motivo</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="Ex: Apresentação de projeto de móveis para cliente"
-            placeholderTextColor="#7E758C"
-            value={purpose}
-            onChangeText={setPurpose}
-            multiline
-            numberOfLines={3}
+          <PrimaryButton
+            title="Confirmar Agendamento"
+            onPress={handleAgendar}
+            isLoading={isSubmitting}
           />
         </View>
-
-        <PrimaryButton
-          title="Confirmar Agendamento"
-          onPress={handleAgendar}
-          isLoading={isSubmitting}
-        />
 
         {/* Modal de Notebooks */}
         <Modal
@@ -375,6 +380,24 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#F8F6FD',
     flexGrow: 1,
+    justifyContent: 'center',
+  },
+  contentBox: {
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
+  },
+  contentBoxDesktop: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 32,
+    borderWidth: 1.5,
+    borderColor: '#E9D5FF',
+    shadowColor: '#7E22CE',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 5,
   },
   centerContainer: {
     flex: 1,
@@ -458,6 +481,9 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,

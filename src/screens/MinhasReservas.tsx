@@ -15,6 +15,7 @@ import {
   Linking,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
@@ -68,6 +69,8 @@ export function MinhasReservas() {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const { user, signOut } = useAuth();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const isAdmin = user?.role === 'ADMINISTRADOR';
 
   const carregarReservas = useCallback(async () => {
@@ -734,7 +737,7 @@ export function MinhasReservas() {
     const isActionLoading = loadingActionId === item.id;
 
     return (
-      <View style={styles.card}>
+      <View style={[styles.card, isDesktop && styles.cardDesktop]}>
         <View style={styles.cardHeader}>
           <Text style={styles.notebookName}>{item.notebookName}</Text>
           <View style={[styles.badge, { backgroundColor: getStatusColor(item.status) + '1A' }]}>
@@ -951,9 +954,12 @@ export function MinhasReservas() {
         </View>
       ) : (
         <FlatList
+          key={isDesktop ? 'reservas-desktop' : 'reservas-mobile'}
           data={reservas}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
+          numColumns={isDesktop ? 2 : 1}
+          columnWrapperStyle={isDesktop ? styles.columnWrapper : undefined}
           contentContainerStyle={[styles.listContent, { paddingBottom: 85 + insets.bottom }]}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -981,9 +987,15 @@ export function MinhasReservas() {
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.modalOverlay}
+          style={[styles.modalOverlay, isDesktop && styles.modalOverlayDesktop]}
         >
-          <View style={[styles.modalContainer, { paddingBottom: Math.max(insets.bottom + 16, 24) }]}>
+          <View
+            style={[
+              styles.modalContainer,
+              isDesktop && styles.modalContainerDesktop,
+              { paddingBottom: Math.max(insets.bottom + 16, 24) },
+            ]}
+          >
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <Text style={styles.modalTitle}>Confirmar Local de Retirada</Text>
               <Text style={styles.modalSubtitle}>
@@ -1169,9 +1181,15 @@ export function MinhasReservas() {
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.modalOverlay}
+          style={[styles.modalOverlay, isDesktop && styles.modalOverlayDesktop]}
         >
-          <View style={[styles.modalContainer, { paddingBottom: Math.max(insets.bottom + 16, 24) }]}>
+          <View
+            style={[
+              styles.modalContainer,
+              isDesktop && styles.modalContainerDesktop,
+              { paddingBottom: Math.max(insets.bottom + 16, 24) },
+            ]}
+          >
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <Text style={styles.modalTitle}>Registrar Devolução</Text>
               <Text style={styles.modalSubtitle}>
@@ -1416,6 +1434,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 6,
+    width: '100%',
+    maxWidth: 960,
+    alignSelf: 'center',
   },
   backButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -1444,6 +1465,13 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
+    width: '100%',
+    maxWidth: 960,
+    alignSelf: 'center',
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    gap: 14,
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -1457,6 +1485,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.06,
     shadowRadius: 6,
+  },
+  cardDesktop: {
+    flex: 1,
+    maxWidth: '48.8%',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -1694,13 +1726,23 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(17, 24, 39, 0.55)',
     justifyContent: 'flex-end',
   },
+  modalOverlayDesktop: {
+    justifyContent: 'center',
+    padding: 20,
+  },
   modalContainer: {
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
     paddingTop: 20,
     maxHeight: '90%',
+  },
+  modalContainerDesktop: {
+    borderRadius: 24,
   },
   modalTitle: {
     fontSize: 19,

@@ -6,6 +6,8 @@ import {
   Alert,
   Image,
   Pressable,
+  ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -29,6 +31,8 @@ export function Login() {
 
   const { signIn } = useAuth();
   const navigation = useNavigation<LoginNavProp>();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
 
   useEffect(() => {
     if (route.params?.email) {
@@ -64,69 +68,77 @@ export function Login() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Image
-        source={require('../../../assets/logo.png')}
-        style={styles.logo}
-        resizeMode="contain"
-      />
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>E-mail</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Seu e-mail cadastrado"
-          placeholderTextColor="#7E758C"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-        />
-
-        <Text style={styles.label}>Senha</Text>
-        <View style={styles.passwordContainer}>
-          <TextInput
-            style={styles.passwordInput}
-            placeholder="Sua senha de acesso"
-            placeholderTextColor="#7E758C"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-            autoCapitalize="none"
-            autoCorrect={false}
+    <SafeAreaView style={[styles.container, isDesktop && styles.containerDesktop]}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.contentBox, isDesktop && styles.contentBoxDesktop]}>
+          <Image
+            source={require('../../../assets/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
           />
-          <Pressable
-            onPress={() => setShowPassword((prev) => !prev)}
-            style={styles.eyeButton}
-            hitSlop={8}
-          >
-            <Ionicons
-              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-              size={22}
-              color="#4B0082"
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>E-mail</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Seu e-mail cadastrado"
+              placeholderTextColor="#7E758C"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
             />
+
+            <Text style={styles.label}>Senha</Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Sua senha de acesso"
+                placeholderTextColor="#7E758C"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <Pressable
+                onPress={() => setShowPassword((prev) => !prev)}
+                style={styles.eyeButton}
+                hitSlop={8}
+              >
+                <Ionicons
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={22}
+                  color="#4B0082"
+                />
+              </Pressable>
+            </View>
+          </View>
+
+          <PrimaryButton
+            title="Entrar"
+            onPress={handleLogin}
+            isLoading={isLoading}
+          />
+
+          <Pressable
+            onPress={() => navigation.navigate('Cadastro')}
+            style={({ pressed }) => [
+              styles.registerPressable,
+              pressed && styles.registerPressed,
+            ]}
+          >
+            <Text style={styles.registerText}>
+              Não tem conta? <Text style={styles.registerLink}>Cadastre-se</Text>
+            </Text>
           </Pressable>
         </View>
-      </View>
-
-      <PrimaryButton
-        title="Entrar"
-        onPress={handleLogin}
-        isLoading={isLoading}
-      />
-
-      <Pressable
-        onPress={() => navigation.navigate('Cadastro')}
-        style={({ pressed }) => [
-          styles.registerPressable,
-          pressed && styles.registerPressed,
-        ]}
-      >
-        <Text style={styles.registerText}>
-          Não tem conta? <Text style={styles.registerLink}>Cadastre-se</Text>
-        </Text>
-      </Pressable>
+      </ScrollView>
     </SafeAreaView>
   );
 }

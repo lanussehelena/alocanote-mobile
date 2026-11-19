@@ -3,14 +3,39 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
-    backgroundColor: '#FFF',
+    backgroundColor: '#FFFFFF',
+  },
+  containerDesktop: {
+    backgroundColor: '#F8F6FD',
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
+    padding: 24,
+  },
+  contentBox: {
+    width: '100%',
+    maxWidth: 440,
+    alignSelf: 'center',
+  },
+  contentBoxDesktop: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 36,
+    borderWidth: 1.5,
+    borderColor: '#E9D5FF',
+    shadowColor: '#4B0082',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 6,
   },
   logo: {
     width: '100%',
+    maxWidth: 260,
     height: 140,
     marginBottom: 28,
+    alignSelf: 'center',
   },
   inputContainer: {
     marginBottom: 16,
@@ -110,6 +135,8 @@ export const styles = StyleSheet.create({
   },
   modalContent: {
     width: '100%',
+    maxWidth: 440,
+    alignSelf: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 20,

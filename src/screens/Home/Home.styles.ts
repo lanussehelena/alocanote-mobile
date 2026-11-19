@@ -20,6 +20,9 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    width: '100%',
+    maxWidth: 960,
+    alignSelf: 'center',
   },
   greetingContainer: {
     flex: 1,
@@ -58,6 +61,14 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 24,
     gap: 16,
+    width: '100%',
+    maxWidth: 960,
+    alignSelf: 'center',
+  },
+  cardsContainerDesktop: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -72,6 +83,10 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
+  },
+  cardDesktop: {
+    width: '48.5%',
+    flexGrow: 1,
   },
   cardIconBox: {
     width: 66,
@@ -127,6 +142,16 @@ export const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.05,
     shadowRadius: 6,
+  },
+  bottomNavContainerDesktop: {
+    maxWidth: 640,
+    width: '100%',
+    alignSelf: 'center',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: '#E9D5FF',
   },
   navButton: {
     flex: 1,
