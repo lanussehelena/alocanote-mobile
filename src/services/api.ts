@@ -7,7 +7,7 @@ export const USER_STORAGE_KEY = '@alocanote:user';
 
 const BACKEND_PORT = '8082';
 const FALLBACK_LAN_IP = '192.168.18.9';
-const CLOUD_PROD_API_URL = 'https://alocanote-backend-7c5x.onrender.com';
+const CLOUD_PROD_API_URL = 'https://alocanote-backend-1.onrender.com';
 
 type UnauthorizedCallback = () => void;
 let onUnauthorizedCallback: UnauthorizedCallback | null = null;
@@ -151,11 +151,20 @@ export function resolveApiBaseUrl(): string {
 
 export const api = axios.create({
   baseURL: resolveApiBaseUrl(),
-  timeout: 10000,
+  timeout: 90000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+export function wakeUpBackend(): void {
+  const baseURL = resolveApiBaseUrl();
+  axios
+    .get(`${baseURL}/health`, { timeout: 90000 })
+    .catch(() => {
+      // Ping silencioso apenas para acordar o servidor (ex: cold start do Render)
+    });
+}
 
 api.interceptors.request.use(async (config) => {
   config.baseURL = resolveApiBaseUrl();
@@ -215,8 +224,11 @@ export function getApiErrorMessage(error: any, fallbackMessage = 'Ocorreu um err
   if (error?.response?.data?.message) {
     return error.response.data.message;
   }
-  if (error?.code === 'ECONNABORTED' || error?.message?.includes('Network Error')) {
-    return `Não foi possível conectar ao servidor (${resolveApiBaseUrl()}). Verifique se o backend está rodando e na mesma rede Wi-Fi.`;
+  if (error?.code === 'ECONNABORTED') {
+    return `O servidor (${resolveApiBaseUrl()}) demorou para responder porque pode estar iniciando. Aguarde alguns segundos e tente novamente.`;
+  }
+  if (error?.message?.includes('Network Error')) {
+    return `Não foi possível conectar ao servidor (${resolveApiBaseUrl()}). Verifique sua conexão ou aguarde alguns segundos caso o backend esteja iniciando.`;
   }
   if (error?.message) {
     return error.message;
