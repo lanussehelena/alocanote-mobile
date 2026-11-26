@@ -210,39 +210,53 @@ export function Home({ navigation }: HomeProps) {
           styles.bottomNavContainer,
           isDesktop && styles.bottomNavContainerDesktop,
           {
-            height: 70 + insets.bottom,
+            height: (isDesktop ? 78 : 70) + insets.bottom,
             paddingBottom: insets.bottom,
           },
         ]}
       >
-        <Pressable
-          style={({ pressed }) => [styles.navButton, pressed && { opacity: 0.6 }]}
-          onPress={handleOpenPerfil}
-        >
-          <Feather name="user" size={28} color="#9CA3AF" />
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.floatingCenterButton,
-            pressed && { opacity: 0.85 },
+        <View
+          style={[
+            styles.bottomNavContent,
+            isDesktop && styles.bottomNavContentDesktop,
           ]}
-          onPress={handleOpenNotebooks}
         >
-          <LinearGradient
-            colors={['#C084FC', '#7E22CE']}
-            style={styles.floatingGradient}
+          <Pressable
+            style={({ pressed }) => [styles.navButton, pressed && { opacity: 0.6 }]}
+            onPress={handleOpenPerfil}
           >
-            <MaterialCommunityIcons name="laptop" size={28} color="#FFFFFF" />
-          </LinearGradient>
-        </Pressable>
+            <Feather name="user" size={26} color="#9CA3AF" />
+            {isDesktop && <Text style={styles.navLabel}>Perfil</Text>}
+          </Pressable>
 
-        <Pressable
-          style={({ pressed }) => [styles.navButton, pressed && { opacity: 0.6 }]}
-          onPress={handleOpenReservas}
-        >
-          <Ionicons name="calendar-outline" size={28} color="#9CA3AF" />
-        </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.floatingCenterButton,
+              isDesktop && styles.floatingCenterButtonDesktop,
+              pressed && { opacity: 0.85 },
+            ]}
+            onPress={handleOpenNotebooks}
+          >
+            <LinearGradient
+              colors={['#C084FC', '#7E22CE']}
+              style={styles.floatingGradient}
+            >
+              <MaterialCommunityIcons name="laptop" size={28} color="#FFFFFF" />
+            </LinearGradient>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [styles.navButton, pressed && { opacity: 0.6 }]}
+            onPress={handleOpenReservas}
+          >
+            <Ionicons name="calendar-outline" size={26} color="#9CA3AF" />
+            {isDesktop && (
+              <Text style={styles.navLabel}>
+                {isAdmin ? 'Reservas' : 'Calendário'}
+              </Text>
+            )}
+          </Pressable>
+        </View>
       </View>
     </SafeAreaView>
   );
