@@ -14,7 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
-import { getApiErrorMessage } from '../../services/api';
+import { getApiErrorMessage, wakeUpBackend } from '../../services/api';
 import { AuthStackParamList } from '../../types/navigation';
 import { PrimaryButton } from '../../components/PrimaryButton/PrimaryButton';
 import { styles } from './Login.styles';
@@ -33,6 +33,10 @@ export function Login() {
   const navigation = useNavigation<LoginNavProp>();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
+
+  useEffect(() => {
+    wakeUpBackend();
+  }, []);
 
   useEffect(() => {
     if (route.params?.email) {
