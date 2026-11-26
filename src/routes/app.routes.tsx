@@ -38,14 +38,12 @@ function AppTabs() {
           paddingTop: 6,
           ...(isDesktop
             ? {
-                maxWidth: 640,
                 width: '100%',
-                alignSelf: 'center',
-                borderTopLeftRadius: 20,
-                borderTopRightRadius: 20,
-                borderLeftWidth: 1,
-                borderRightWidth: 1,
-                borderColor: '#E9D5FF',
+                height: 68,
+                paddingHorizontal: Math.max((width - 960) / 2, 24),
+                borderTopLeftRadius: 24,
+                borderTopRightRadius: 24,
+                borderTopColor: '#E9D5FF',
               }
             : {}),
         },
