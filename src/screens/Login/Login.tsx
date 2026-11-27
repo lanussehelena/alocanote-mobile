@@ -72,11 +72,22 @@ export function Login() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, isDesktop && styles.containerDesktop]}>
+    <SafeAreaView
+      style={[styles.container, isDesktop && styles.containerDesktop]}
+      edges={['top', 'bottom', 'left', 'right']}
+    >
       <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
+        horizontal={false}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        bounces={false}
+        alwaysBounceVertical={false}
+        alwaysBounceHorizontal={false}
+        overScrollMode="never"
+        directionalLockEnabled
       >
         <View style={[styles.contentBox, isDesktop && styles.contentBoxDesktop]}>
           <Image
