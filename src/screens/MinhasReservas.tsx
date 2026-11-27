@@ -21,6 +21,7 @@ import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
+import { dataCy } from '../utils/dataCy';
 import { reservationService } from '../services/reservationService';
 import { getApiErrorMessage, isUnauthorizedError } from '../services/api';
 import { ReservationResponseDTO, ReservationStatus } from '../types';
@@ -803,8 +804,14 @@ export function MinhasReservas() {
       <View style={[styles.card, isDesktop && styles.cardDesktop]}>
         <View style={styles.cardHeader}>
           <Text style={styles.notebookName}>{item.notebookName}</Text>
-          <View style={[styles.badge, { backgroundColor: getStatusColor(item.status) + '1A' }]}>
-            <Text style={[styles.badgeText, { color: getStatusColor(item.status) }]}>
+          <View
+            style={[styles.badge, { backgroundColor: getStatusColor(item.status) + '1A' }]}
+            {...dataCy('status-reserva')}
+          >
+            <Text
+              style={[styles.badgeText, { color: getStatusColor(item.status) }]}
+              {...dataCy('status-reserva')}
+            >
               {getStatusLabel(item.status)}
             </Text>
           </View>
@@ -932,6 +939,7 @@ export function MinhasReservas() {
               ]}
               onPress={() => handleAbrirCheckIn(item)}
               disabled={isActionLoading}
+              {...dataCy('btn-checkin')}
             >
               {isActionLoading ? (
                 <ActivityIndicator color="#FFF" size="small" />
@@ -966,6 +974,7 @@ export function MinhasReservas() {
               ]}
               onPress={() => handleAbrirDevolucao(item)}
               disabled={isActionLoading}
+              {...dataCy('btn-devolver')}
             >
               {isActionLoading ? (
                 <ActivityIndicator color="#FFF" size="small" />
@@ -980,7 +989,7 @@ export function MinhasReservas() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} {...dataCy('minhas-reservas')}>
       <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
         <View style={styles.headerTop}>
           <Pressable

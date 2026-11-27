@@ -3,14 +3,22 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: '100%',
     backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
   },
   containerDesktop: {
     backgroundColor: '#F8F6FD',
   },
+  scrollView: {
+    flex: 1,
+    width: '100%',
+  },
   scrollContent: {
+    width: '100%',
     flexGrow: 1,
     justifyContent: 'center',
+    alignItems: 'center',
     padding: 24,
   },
   contentBox: {
@@ -38,6 +46,7 @@ export const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   inputContainer: {
+    width: '100%',
     marginBottom: 16,
   },
   label: {
@@ -47,6 +56,7 @@ export const styles = StyleSheet.create({
     color: '#000',
   },
   input: {
+    width: '100%',
     backgroundColor: '#D1C4E9',
     borderRadius: 8,
     padding: 16,
@@ -55,15 +65,18 @@ export const styles = StyleSheet.create({
     color: '#1F2937',
   },
   passwordContainer: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#D1C4E9',
     borderRadius: 8,
     paddingHorizontal: 16,
     marginBottom: 8,
+    overflow: 'hidden',
   },
   passwordInput: {
     flex: 1,
+    minWidth: 0,
     paddingVertical: 16,
     fontSize: 16,
     color: '#1F2937',
@@ -205,5 +218,20 @@ export const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  errorContainer: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#EF4444',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    width: '100%',
+  },
+  errorText: {
+    color: '#B91C1C',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

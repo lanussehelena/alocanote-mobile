@@ -17,7 +17,7 @@ import { getApiErrorMessage, wakeUpBackend } from '../../services/api';
 import { isEmailNotVerifiedError } from '../../services/authService';
 import { AuthStackParamList } from '../../types/navigation';
 import { PrimaryButton } from '../../components/PrimaryButton/PrimaryButton';
-import { FeedbackBanner, FeedbackState } from '../../components/FeedbackBanner/FeedbackBanner';
+import { dataCy } from '../../utils/dataCy';
 import { styles } from './Login.styles';
 
 type LoginNavProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
@@ -29,7 +29,7 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [feedback, setFeedback] = useState<FeedbackState | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const { signIn } = useAuth();
   const navigation = useNavigation<LoginNavProp>();
@@ -47,24 +47,14 @@ export function Login() {
   }, [route.params?.email]);
 
   const handleLogin = async () => {
+    setErrorMessage('');
     const emailLimpo = email.trim().toLowerCase();
     setFeedback(null);
 
     if (!emailLimpo || !password) {
-      setFeedback({
-        type: 'warning',
-        title: 'Campos obrigatórios',
-        message: 'Por favor, preencha o e-mail e a senha.',
-      });
-      return;
-    }
-
-    if (!emailLimpo.includes('@') || !emailLimpo.includes('.')) {
-      setFeedback({
-        type: 'warning',
-        title: 'E-mail inválido',
-        message: 'Digite um endereço de e-mail válido para continuar.',
-      });
+      const msg = 'Por favor, preencha o e-mail e a senha.';
+      setErrorMessage(msg);
+      Alert.alert('Campos obrigatórios', msg);
       return;
     }
 
@@ -88,22 +78,30 @@ export function Login() {
         error,
         'Credenciais inválidas ou não foi possível conectar ao servidor.'
       );
-      setFeedback({
-        type: 'error',
-        title: 'Erro na autenticação',
-        message: mensagem,
-      });
+      setErrorMessage(mensagem);
+      Alert.alert('Erro na Autenticação', mensagem);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={[styles.container, isDesktop && styles.containerDesktop]}>
+    <SafeAreaView
+      style={[styles.container, isDesktop && styles.containerDesktop]}
+      edges={['top', 'bottom', 'left', 'right']}
+    >
       <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
+        horizontal={false}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        bounces={false}
+        alwaysBounceVertical={false}
+        alwaysBounceHorizontal={false}
+        overScrollMode="never"
+        directionalLockEnabled
       >
         <View style={[styles.contentBox, isDesktop && styles.contentBoxDesktop]}>
           <Image
@@ -126,6 +124,7 @@ export function Login() {
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="email-address"
+              {...dataCy('input-email')}
             />
 
             <Text style={styles.label}>Senha</Text>
@@ -142,6 +141,7 @@ export function Login() {
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
+                {...dataCy('input-senha')}
               />
               <Pressable
                 onPress={() => setShowPassword((prev) => !prev)}
@@ -157,12 +157,17 @@ export function Login() {
             </View>
           </View>
 
-          <FeedbackBanner feedback={feedback} onDismiss={() => setFeedback(null)} />
+          {!!errorMessage && (
+            <View style={styles.errorContainer} {...dataCy('mensagem-erro')}>
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          )}
 
           <PrimaryButton
             title="Entrar"
             onPress={handleLogin}
             isLoading={isLoading}
+            {...dataCy('btn-entrar')}
           />
 
           <Pressable

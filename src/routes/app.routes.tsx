@@ -2,6 +2,7 @@ import React from 'react';
 import { useWindowDimensions } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { Home } from '../screens/Home/Home';
 import { Notebooks } from '../screens/Notebooks';
@@ -16,7 +17,9 @@ const Stack = createNativeStackNavigator<AppStackParamList>();
 
 function AppTabs() {
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isDesktop = width >= 768;
+  const bottomInset = isDesktop ? 0 : insets.bottom;
 
   return (
     <Tab.Navigator
@@ -33,13 +36,12 @@ function AppTabs() {
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.08,
           shadowRadius: 4,
-          height: 62,
-          paddingBottom: 8,
+          height: (isDesktop ? 68 : 62) + bottomInset,
+          paddingBottom: 8 + bottomInset,
           paddingTop: 6,
           ...(isDesktop
             ? {
                 width: '100%',
-                height: 68,
                 paddingHorizontal: Math.max((width - 960) / 2, 24),
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,

@@ -3,17 +3,34 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   screenWrapper: {
     flex: 1,
+    width: '100%',
     backgroundColor: '#FFFFFF',
+    overflow: 'hidden',
   },
   screenWrapperDesktop: {
     backgroundColor: '#F8F6FD',
   },
+  keyboardContainer: {
+    flex: 1,
+    width: '100%',
+    overflow: 'hidden',
+  },
+  scrollView: {
+    flex: 1,
+    width: '100%',
+  },
   container: {
+    width: '100%',
     paddingHorizontal: 24,
     paddingTop: 36,
     paddingBottom: 24,
     justifyContent: 'center',
+    alignItems: 'center',
     flexGrow: 1,
+  },
+  containerMobile: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
   },
   contentBox: {
     width: '100%',
@@ -40,6 +57,7 @@ export const styles = StyleSheet.create({
     color: '#1F2937',
   },
   blocoCampo: {
+    width: '100%',
     marginBottom: 14,
   },
   labelCampo: {
@@ -49,25 +67,29 @@ export const styles = StyleSheet.create({
     marginBottom: 6,
   },
   inputLilas: {
+    width: '100%',
     height: 50,
     backgroundColor: '#E9D5FF',
     borderRadius: 8,
     paddingHorizontal: 14,
-    fontSize: 15,
+    fontSize: 16,
     color: '#1F2937',
     fontWeight: '500',
   },
   senhaContainer: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     height: 50,
     backgroundColor: '#E9D5FF',
     borderRadius: 8,
     paddingHorizontal: 14,
+    overflow: 'hidden',
   },
   senhaInput: {
     flex: 1,
-    fontSize: 15,
+    minWidth: 0,
+    fontSize: 16,
     color: '#1F2937',
     fontWeight: '500',
   },
@@ -76,20 +98,24 @@ export const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   telefoneContainer: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     height: 50,
     backgroundColor: '#E9D5FF',
     borderRadius: 8,
     paddingHorizontal: 12,
+    overflow: 'hidden',
   },
   telefoneInput: {
     flex: 1,
-    fontSize: 15,
+    minWidth: 0,
+    fontSize: 16,
     color: '#1F2937',
     fontWeight: '500',
   },
   selectCargo: {
+    width: '100%',
     height: 50,
     backgroundColor: '#E9D5FF',
     borderRadius: 8,
@@ -97,6 +123,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    overflow: 'hidden',
   },
   selectCargoPressed: {
     opacity: 0.8,
@@ -105,7 +132,8 @@ export const styles = StyleSheet.create({
     backgroundColor: '#F3E8FF',
   },
   textoCargo: {
-    fontSize: 15,
+    flex: 1,
+    fontSize: 16,
     color: '#1F2937',
     fontWeight: '500',
   },
@@ -279,5 +307,20 @@ export const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  errorContainer: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#EF4444',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    width: '100%',
+  },
+  errorText: {
+    color: '#B91C1C',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

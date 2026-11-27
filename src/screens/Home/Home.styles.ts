@@ -3,10 +3,17 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: '100%',
     backgroundColor: '#F8F6FD',
+    overflow: 'hidden',
+  },
+  scrollView: {
+    flex: 1,
+    width: '100%',
   },
   scrollContent: {
-    paddingBottom: 110,
+    flexGrow: 1,
+    paddingBottom: 36,
   },
   header: {
     backgroundColor: '#5B1B8E',
@@ -125,17 +132,13 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   bottomNavContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     width: '100%',
-    height: 75,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
-    justifyContent: 'center',
     borderTopWidth: 1,
     borderTopColor: '#F3E8FF',
+    overflow: 'visible',
+    zIndex: 10,
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -3 },
@@ -151,14 +154,16 @@ export const styles = StyleSheet.create({
   },
   bottomNavContent: {
     width: '100%',
-    height: '100%',
+    height: 68,
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingHorizontal: 20,
+    overflow: 'visible',
   },
   bottomNavContentDesktop: {
     maxWidth: 960,
+    height: 78,
     paddingHorizontal: 32,
   },
   navButton: {
@@ -181,11 +186,12 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 4,
+    zIndex: 20,
     shadowColor: '#7E22CE',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
-    elevation: 8,
+    elevation: 12,
   },
   floatingCenterButtonDesktop: {
     top: -20,
