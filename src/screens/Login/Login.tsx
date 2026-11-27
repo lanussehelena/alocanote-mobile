@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -50,6 +49,7 @@ export function Login() {
   const handleLogin = async () => {
     setErrorMessage('');
     const emailLimpo = email.trim().toLowerCase();
+    setFeedback(null);
 
     if (!emailLimpo || !password) {
       const msg = 'Por favor, preencha o e-mail e a senha.';
@@ -117,7 +117,10 @@ export function Login() {
               placeholder="Seu e-mail cadastrado"
               placeholderTextColor="#7E758C"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (feedback) setFeedback(null);
+              }}
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="email-address"
@@ -131,7 +134,10 @@ export function Login() {
                 placeholder="Sua senha de acesso"
                 placeholderTextColor="#7E758C"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (feedback) setFeedback(null);
+                }}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoCorrect={false}

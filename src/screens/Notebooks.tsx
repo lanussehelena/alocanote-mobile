@@ -5,7 +5,6 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   Pressable,
   RefreshControl,
   Modal,
@@ -16,7 +15,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { notebookService } from '../services/notebookService';
 import { getApiErrorMessage, isUnauthorizedError } from '../services/api';
 import { NotebookResponseDTO, NotebookStatus, CreateNotebookRequestDTO } from '../types';
@@ -40,6 +39,12 @@ export function Notebooks() {
   const [status, setStatus] = useState<NotebookStatus>(NotebookStatus.DISPONIVEL);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Feedbacks em tela e confirmação de exclusão
+  const [feedback, setFeedback] = useState<FeedbackState | null>(null);
+  const [modalFeedback, setModalFeedback] = useState<FeedbackState | null>(null);
+  const [notebookParaExcluir, setNotebookParaExcluir] = useState<NotebookResponseDTO | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const navigation = useNavigation<NotebooksNavProp>();
   const { user, signOut } = useAuth();
   const insets = useSafeAreaInsets();
@@ -54,7 +59,11 @@ export function Notebooks() {
     } catch (error) {
       if (isUnauthorizedError(error)) return;
       const mensagem = getApiErrorMessage(error, 'Erro ao carregar notebooks.');
-      Alert.alert('Erro', mensagem);
+      setFeedback({
+        type: 'error',
+        title: 'Erro ao carregar',
+        message: mensagem,
+      });
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -71,6 +80,7 @@ export function Notebooks() {
   };
 
   const handleOpenNovo = () => {
+    setModalFeedback(null);
     setIsEditMode(false);
     setEditingId(null);
     setNome('');
@@ -80,6 +90,7 @@ export function Notebooks() {
   };
 
   const handleOpenEditar = (item: NotebookResponseDTO) => {
+    setModalFeedback(null);
     setIsEditMode(true);
     setEditingId(item.id);
     setNome(item.name);
@@ -89,8 +100,13 @@ export function Notebooks() {
   };
 
   const handleSalvarNotebook = async () => {
+    setModalFeedback(null);
     if (!nome.trim() || !modeloDescricao.trim()) {
-      Alert.alert('Atenção', 'Preencha o nome e a descrição do notebook.');
+      setModalFeedback({
+        type: 'warning',
+        title: 'Campos obrigatórios',
+        message: 'Preencha o nome e a descrição do notebook.',
+      });
       return;
     }
 
@@ -104,44 +120,62 @@ export function Notebooks() {
 
       if (isEditMode && editingId) {
         await notebookService.updateNotebook(editingId, payload);
-        Alert.alert('Sucesso', 'Notebook atualizado com sucesso!');
+        setFeedback({
+          type: 'success',
+          title: 'Notebook atualizado',
+          message: 'Notebook atualizado com sucesso!',
+        });
       } else {
         await notebookService.createNotebook(payload);
-        Alert.alert('Sucesso', 'Novo notebook cadastrado!');
+        setFeedback({
+          type: 'success',
+          title: 'Notebook cadastrado',
+          message: 'Novo notebook cadastrado com sucesso!',
+        });
       }
 
       setModalVisivel(false);
+      setModalFeedback(null);
       carregarNotebooks();
     } catch (error) {
       const mensagem = getApiErrorMessage(error, 'Não foi possível salvar o notebook.');
-      Alert.alert('Erro', mensagem);
+      setModalFeedback({
+        type: 'error',
+        title: 'Erro ao salvar',
+        message: mensagem,
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleExcluirNotebook = (item: NotebookResponseDTO) => {
-    Alert.alert(
-      'Excluir Notebook',
-      `Tem certeza que deseja remover o "${item.name}"? Todas as reservas vinculadas serão removidas.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Sim, excluir',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await notebookService.deleteNotebook(item.id);
-              Alert.alert('Sucesso', 'Equipamento removido com sucesso.');
-              carregarNotebooks();
-            } catch (error) {
-              const mensagem = getApiErrorMessage(error, 'Erro ao excluir notebook.');
-              Alert.alert('Erro', mensagem);
-            }
-          },
-        },
-      ]
-    );
+    setNotebookParaExcluir(item);
+  };
+
+  const handleConfirmarExclusaoNotebook = async () => {
+    if (!notebookParaExcluir) return;
+    setIsDeleting(true);
+    try {
+      await notebookService.deleteNotebook(notebookParaExcluir.id);
+      setNotebookParaExcluir(null);
+      setFeedback({
+        type: 'success',
+        title: 'Equipamento removido',
+        message: 'Equipamento removido com sucesso.',
+      });
+      carregarNotebooks();
+    } catch (error) {
+      setNotebookParaExcluir(null);
+      const mensagem = getApiErrorMessage(error, 'Erro ao excluir notebook.');
+      setFeedback({
+        type: 'error',
+        title: 'Erro ao excluir',
+        message: mensagem,
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const getStatusColor = (s: NotebookStatus) => {
@@ -265,6 +299,12 @@ export function Notebooks() {
       </View>
 
       {/* Lista */}
+      {feedback ? (
+        <View style={styles.feedbackWrapper}>
+          <FeedbackBanner feedback={feedback} onDismiss={() => setFeedback(null)} />
+        </View>
+      ) : null}
+
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#7E22CE" />
@@ -361,6 +401,8 @@ export function Notebooks() {
                 ))}
               </View>
 
+              <FeedbackBanner feedback={modalFeedback} onDismiss={() => setModalFeedback(null)} />
+
               <Pressable
                 style={({ pressed }) => [
                   styles.submitBtn,
@@ -382,6 +424,18 @@ export function Notebooks() {
           </View>
         </View>
       </Modal>
+
+      <ConfirmModal
+        visible={Boolean(notebookParaExcluir)}
+        title="Excluir Notebook"
+        message={`Tem certeza que deseja remover o "${notebookParaExcluir?.name || 'equipamento'}"? Todas as reservas vinculadas serão removidas.`}
+        confirmLabel="Sim, excluir"
+        cancelLabel="Cancelar"
+        destructive
+        isLoading={isDeleting}
+        onConfirm={handleConfirmarExclusaoNotebook}
+        onCancel={() => setNotebookParaExcluir(null)}
+      />
     </View>
   );
 }
@@ -595,6 +649,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  feedbackWrapper: {
+    width: '100%',
+    maxWidth: 960,
+    alignSelf: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
   loadingText: {
     marginTop: 10,

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  Alert,
   Pressable,
   Modal,
   FlatList,
@@ -70,6 +69,7 @@ export function Cadastro() {
     if (apenasNumeros.length > 7) formatado = `(${apenasNumeros.substring(0, 2)}) ${apenasNumeros.substring(2, 7)}-${apenasNumeros.substring(7, 11)}`;
 
     setTelefone(formatado);
+    if (feedback) setFeedback(null);
   };
 
   const handleCadastro = async () => {
@@ -78,6 +78,8 @@ export function Cadastro() {
     const emailLimpo = email.trim().toLowerCase();
     const confirmarEmailLimpo = confirmarEmail.trim().toLowerCase();
     const senhaLimpa = senha.trim();
+
+    setFeedback(null);
 
     if (!nomeLimpo || !emailLimpo || !confirmarEmailLimpo || !senhaLimpa) {
       const msg = 'Por favor, preencha nome, e-mail, confirmação de e-mail e senha.';
