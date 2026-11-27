@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -18,6 +17,7 @@ import { getApiErrorMessage, wakeUpBackend } from '../../services/api';
 import { isEmailNotVerifiedError } from '../../services/authService';
 import { AuthStackParamList } from '../../types/navigation';
 import { PrimaryButton } from '../../components/PrimaryButton/PrimaryButton';
+import { FeedbackBanner, FeedbackState } from '../../components/FeedbackBanner/FeedbackBanner';
 import { styles } from './Login.styles';
 
 type LoginNavProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
@@ -29,6 +29,7 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [feedback, setFeedback] = useState<FeedbackState | null>(null);
 
   const { signIn } = useAuth();
   const navigation = useNavigation<LoginNavProp>();
@@ -47,9 +48,23 @@ export function Login() {
 
   const handleLogin = async () => {
     const emailLimpo = email.trim().toLowerCase();
+    setFeedback(null);
 
     if (!emailLimpo || !password) {
-      Alert.alert('Campos obrigatórios', 'Por favor, preencha o e-mail e a senha.');
+      setFeedback({
+        type: 'warning',
+        title: 'Campos obrigatórios',
+        message: 'Por favor, preencha o e-mail e a senha.',
+      });
+      return;
+    }
+
+    if (!emailLimpo.includes('@') || !emailLimpo.includes('.')) {
+      setFeedback({
+        type: 'warning',
+        title: 'E-mail inválido',
+        message: 'Digite um endereço de e-mail válido para continuar.',
+      });
       return;
     }
 
@@ -73,7 +88,11 @@ export function Login() {
         error,
         'Credenciais inválidas ou não foi possível conectar ao servidor.'
       );
-      Alert.alert('Erro na Autenticação', mensagem);
+      setFeedback({
+        type: 'error',
+        title: 'Erro na autenticação',
+        message: mensagem,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -100,7 +119,10 @@ export function Login() {
               placeholder="Seu e-mail cadastrado"
               placeholderTextColor="#7E758C"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (feedback) setFeedback(null);
+              }}
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="email-address"
@@ -113,7 +135,10 @@ export function Login() {
                 placeholder="Sua senha de acesso"
                 placeholderTextColor="#7E758C"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (feedback) setFeedback(null);
+                }}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -131,6 +156,8 @@ export function Login() {
               </Pressable>
             </View>
           </View>
+
+          <FeedbackBanner feedback={feedback} onDismiss={() => setFeedback(null)} />
 
           <PrimaryButton
             title="Entrar"

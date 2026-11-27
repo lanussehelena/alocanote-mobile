@@ -5,7 +5,6 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   Pressable,
   RefreshControl,
   Modal,
@@ -16,12 +15,14 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
 import { userService } from '../../services/userService';
 import { getApiErrorMessage, isUnauthorizedError } from '../../services/api';
 import { UserResponseDTO, Role, RegisterUserRequestDTO } from '../../types';
 import { AppStackParamList } from '../../types/navigation';
 import { useAuth } from '../../contexts/AuthContext';
+import { FeedbackBanner, FeedbackState } from '../../components/FeedbackBanner/FeedbackBanner';
+import { ConfirmModal } from '../../components/ConfirmModal/ConfirmModal';
 
 type UsuariosNavProp = NativeStackNavigationProp<AppStackParamList>;
 
@@ -45,6 +46,13 @@ export function Usuarios() {
   const [usuarioEmEdicao, setUsuarioEmEdicao] = useState<UserResponseDTO | null>(null);
   const [cargoEditado, setCargoEditado] = useState<Role>(Role.PROJETISTA);
 
+  // Feedbacks em tela e confirmação de exclusão
+  const [feedback, setFeedback] = useState<FeedbackState | null>(null);
+  const [modalNovoFeedback, setModalNovoFeedback] = useState<FeedbackState | null>(null);
+  const [modalEditarFeedback, setModalEditarFeedback] = useState<FeedbackState | null>(null);
+  const [usuarioParaExcluir, setUsuarioParaExcluir] = useState<UserResponseDTO | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const navigation = useNavigation<UsuariosNavProp>();
   const { user: currentUser } = useAuth();
   const insets = useSafeAreaInsets();
@@ -58,7 +66,11 @@ export function Usuarios() {
     } catch (error) {
       if (isUnauthorizedError(error)) return;
       const mensagem = getApiErrorMessage(error, 'Erro ao carregar colaboradores.');
-      Alert.alert('Erro', mensagem);
+      setFeedback({
+        type: 'error',
+        title: 'Erro ao carregar',
+        message: mensagem,
+      });
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -75,8 +87,22 @@ export function Usuarios() {
   };
 
   const handleCadastrarUsuario = async () => {
+    setModalNovoFeedback(null);
     if (!novoNome.trim() || !novoEmail.trim() || !novaSenha.trim()) {
-      Alert.alert('Atenção', 'Preencha nome, e-mail e senha do colaborador.');
+      setModalNovoFeedback({
+        type: 'warning',
+        title: 'Campos obrigatórios',
+        message: 'Preencha nome, e-mail e senha do colaborador.',
+      });
+      return;
+    }
+
+    if (novaSenha.trim().length < 6) {
+      setModalNovoFeedback({
+        type: 'warning',
+        title: 'Senha curta',
+        message: 'A senha temporária deve ter pelo menos 6 caracteres.',
+      });
       return;
     }
 
@@ -91,17 +117,26 @@ export function Usuarios() {
       };
 
       await userService.createUser(payload);
-      Alert.alert('Sucesso', 'Colaborador cadastrado com sucesso!');
       setModalNovoVisivel(false);
+      setModalNovoFeedback(null);
       setNovoNome('');
       setNovoEmail('');
       setNovaSenha('');
       setNovoTelefone('');
       setNovoCargo(Role.PROJETISTA);
+      setFeedback({
+        type: 'success',
+        title: 'Colaborador cadastrado',
+        message: 'Colaborador cadastrado com sucesso!',
+      });
       carregarUsuarios();
     } catch (error) {
       const mensagem = getApiErrorMessage(error, 'Não foi possível cadastrar o colaborador.');
-      Alert.alert('Erro', mensagem);
+      setModalNovoFeedback({
+        type: 'error',
+        title: 'Erro ao cadastrar',
+        message: mensagem,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -109,19 +144,28 @@ export function Usuarios() {
 
   const handleSalvarEdicaoCargo = async () => {
     if (!usuarioEmEdicao) return;
+    setModalEditarFeedback(null);
 
     try {
       setIsSubmitting(true);
       await userService.updateUser(usuarioEmEdicao.id, {
         role: cargoEditado,
       });
-      Alert.alert('Sucesso', 'Cargo atualizado com sucesso!');
       setModalEditarVisivel(false);
       setUsuarioEmEdicao(null);
+      setFeedback({
+        type: 'success',
+        title: 'Cargo atualizado',
+        message: 'Cargo atualizado com sucesso!',
+      });
       carregarUsuarios();
     } catch (error) {
       const mensagem = getApiErrorMessage(error, 'Não foi possível atualizar o cargo.');
-      Alert.alert('Erro', mensagem);
+      setModalEditarFeedback({
+        type: 'error',
+        title: 'Erro ao atualizar',
+        message: mensagem,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -129,31 +173,40 @@ export function Usuarios() {
 
   const handleExcluirUsuario = (usuario: UserResponseDTO) => {
     if (usuario.email.toLowerCase() === 'admin@alocanote.com' || usuario.id === currentUser?.id) {
-      Alert.alert('Ação Não Permitida', 'Você não pode excluir o seu próprio perfil ou o administrador mestre.');
+      setFeedback({
+        type: 'warning',
+        title: 'Ação não permitida',
+        message: 'Você não pode excluir o seu próprio perfil ou o administrador mestre.',
+      });
       return;
     }
 
-    Alert.alert(
-      'Excluir Colaborador',
-      `Tem certeza que deseja remover ${usuario.name}? As reservas vinculadas a este colaborador serão canceladas.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Sim, excluir',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await userService.deleteUser(usuario.id);
-              Alert.alert('Sucesso', 'Colaborador removido.');
-              carregarUsuarios();
-            } catch (error) {
-              const mensagem = getApiErrorMessage(error, 'Erro ao remover colaborador.');
-              Alert.alert('Erro', mensagem);
-            }
-          },
-        },
-      ]
-    );
+    setUsuarioParaExcluir(usuario);
+  };
+
+  const handleConfirmarExclusaoUsuario = async () => {
+    if (!usuarioParaExcluir) return;
+    setIsDeleting(true);
+    try {
+      await userService.deleteUser(usuarioParaExcluir.id);
+      setUsuarioParaExcluir(null);
+      setFeedback({
+        type: 'success',
+        title: 'Colaborador removido',
+        message: 'Colaborador removido com sucesso.',
+      });
+      carregarUsuarios();
+    } catch (error) {
+      setUsuarioParaExcluir(null);
+      const mensagem = getApiErrorMessage(error, 'Erro ao remover colaborador.');
+      setFeedback({
+        type: 'error',
+        title: 'Erro ao remover',
+        message: mensagem,
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const getRoleLabel = (role: Role | string) => {
@@ -228,6 +281,7 @@ export function Usuarios() {
                 pressed && styles.editBtnPressed,
               ]}
               onPress={() => {
+                setModalEditarFeedback(null);
                 setUsuarioEmEdicao(item);
                 setCargoEditado(item.role);
                 setModalEditarVisivel(true);
@@ -283,7 +337,10 @@ export function Usuarios() {
               styles.addButton,
               pressed && styles.addButtonPressed,
             ]}
-            onPress={() => setModalNovoVisivel(true)}
+            onPress={() => {
+              setModalNovoFeedback(null);
+              setModalNovoVisivel(true);
+            }}
           >
             <Ionicons name="person-add" size={16} color="#FFFFFF" />
             <Text style={styles.addButtonText}>Novo</Text>
@@ -310,6 +367,12 @@ export function Usuarios() {
       </View>
 
       {/* Conteúdo Principal */}
+      {feedback ? (
+        <View style={styles.feedbackWrapper}>
+          <FeedbackBanner feedback={feedback} onDismiss={() => setFeedback(null)} />
+        </View>
+      ) : null}
+
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#7E22CE" />
@@ -424,6 +487,11 @@ export function Usuarios() {
                 ))}
               </View>
 
+              <FeedbackBanner
+                feedback={modalNovoFeedback}
+                onDismiss={() => setModalNovoFeedback(null)}
+              />
+
               <Pressable
                 style={({ pressed }) => [
                   styles.submitBtn,
@@ -487,6 +555,11 @@ export function Usuarios() {
               ))}
             </View>
 
+            <FeedbackBanner
+              feedback={modalEditarFeedback}
+              onDismiss={() => setModalEditarFeedback(null)}
+            />
+
             <Pressable
               style={({ pressed }) => [
                 styles.submitBtn,
@@ -505,6 +578,18 @@ export function Usuarios() {
           </View>
         </View>
       </Modal>
+
+      <ConfirmModal
+        visible={Boolean(usuarioParaExcluir)}
+        title="Excluir Colaborador"
+        message={`Tem certeza que deseja remover ${usuarioParaExcluir?.name || 'este colaborador'}? As reservas vinculadas a este colaborador serão canceladas.`}
+        confirmLabel="Sim, excluir"
+        cancelLabel="Cancelar"
+        destructive
+        isLoading={isDeleting}
+        onConfirm={handleConfirmarExclusaoUsuario}
+        onCancel={() => setUsuarioParaExcluir(null)}
+      />
     </View>
   );
 }
@@ -597,6 +682,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  feedbackWrapper: {
+    width: '100%',
+    maxWidth: 960,
+    alignSelf: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
   loadingText: {
     marginTop: 10,

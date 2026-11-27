@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  Alert,
   Pressable,
   Modal,
   FlatList,
@@ -23,6 +22,7 @@ import { AuthStackParamList } from '../../types/navigation';
 import { PAISES, Pais } from '../../constants/paises';
 import { SeletorPais } from '../../components/SeletorPais/SeletorPais';
 import { PrimaryButton } from '../../components/PrimaryButton/PrimaryButton';
+import { FeedbackBanner, FeedbackState } from '../../components/FeedbackBanner/FeedbackBanner';
 import { styles } from './Cadastro.styles';
 
 interface CargoItem {
@@ -58,6 +58,7 @@ export function Cadastro() {
   const [outroCargo, setOutroCargo] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
+  const [feedback, setFeedback] = useState<FeedbackState | null>(null);
 
   const aplicarMascaraTelefone = (valor: string) => {
     let apenasNumeros = valor.replace(/\D/g, '');
@@ -68,6 +69,7 @@ export function Cadastro() {
     if (apenasNumeros.length > 7) formatado = `(${apenasNumeros.substring(0, 2)}) ${apenasNumeros.substring(2, 7)}-${apenasNumeros.substring(7, 11)}`;
 
     setTelefone(formatado);
+    if (feedback) setFeedback(null);
   };
 
   const handleCadastro = async () => {
@@ -76,18 +78,50 @@ export function Cadastro() {
     const confirmarEmailLimpo = confirmarEmail.trim().toLowerCase();
     const senhaLimpa = senha.trim();
 
+    setFeedback(null);
+
     if (!nomeLimpo || !emailLimpo || !confirmarEmailLimpo || !senhaLimpa) {
-      Alert.alert('Campos obrigatórios', 'Por favor, preencha nome, e-mail, confirmação de e-mail e senha.');
+      setFeedback({
+        type: 'warning',
+        title: 'Campos obrigatórios',
+        message: 'Por favor, preencha nome, e-mail, confirmação de e-mail e senha.',
+      });
+      return;
+    }
+
+    if (!emailLimpo.includes('@') || !emailLimpo.includes('.')) {
+      setFeedback({
+        type: 'warning',
+        title: 'E-mail inválido',
+        message: 'Digite um endereço de e-mail válido.',
+      });
       return;
     }
 
     if (emailLimpo !== confirmarEmailLimpo) {
-      Alert.alert('E-mails não coincidem', 'O e-mail digitado e a confirmação de e-mail devem ser iguais.');
+      setFeedback({
+        type: 'warning',
+        title: 'E-mails não coincidem',
+        message: 'O e-mail digitado e a confirmação de e-mail devem ser iguais.',
+      });
+      return;
+    }
+
+    if (senhaLimpa.length < 6) {
+      setFeedback({
+        type: 'warning',
+        title: 'Senha muito curta',
+        message: 'A senha deve ter pelo menos 6 caracteres.',
+      });
       return;
     }
 
     if (cargoSelecionado.chave === Role.OUTROS && !outroCargo.trim()) {
-      Alert.alert('Campo obrigatório', 'Por favor, digite qual é o seu cargo.');
+      setFeedback({
+        type: 'warning',
+        title: 'Campo obrigatório',
+        message: 'Por favor, digite qual é o seu cargo.',
+      });
       return;
     }
 
@@ -115,7 +149,11 @@ export function Cadastro() {
     } catch (error: any) {
       console.error('Erro ao cadastrar usuário:', error);
       const mensagem = getApiErrorMessage(error, 'Não foi possível realizar o cadastro.');
-      Alert.alert('Erro no Cadastro', mensagem);
+      setFeedback({
+        type: 'error',
+        title: 'Erro no cadastro',
+        message: mensagem,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -239,6 +277,8 @@ export function Cadastro() {
               />
             )}
           </View>
+
+          <FeedbackBanner feedback={feedback} onDismiss={() => setFeedback(null)} />
 
           <PrimaryButton
             title="Cadastrar"

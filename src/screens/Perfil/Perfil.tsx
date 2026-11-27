@@ -5,7 +5,6 @@ import {
   ScrollView,
   Pressable,
   Image,
-  Alert,
   TextInput,
   Modal,
   ActivityIndicator,
@@ -20,6 +19,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { userService } from '../../services/userService';
 import { getApiErrorMessage } from '../../services/api';
 import { Role } from '../../types';
+import { FeedbackBanner, FeedbackState } from '../../components/FeedbackBanner/FeedbackBanner';
+import { ConfirmModal } from '../../components/ConfirmModal/ConfirmModal';
 import { styles } from './Perfil.styles';
 
 const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300';
@@ -99,6 +100,13 @@ export function Perfil() {
   const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
   const [salvandoSenha, setSalvandoSenha] = useState(false);
 
+  // Feedbacks em tela e modal de confirmação de saída
+  const [feedbackGeral, setFeedbackGeral] = useState<FeedbackState | null>(null);
+  const [feedbackDados, setFeedbackDados] = useState<FeedbackState | null>(null);
+  const [feedbackSenha, setFeedbackSenha] = useState<FeedbackState | null>(null);
+  const [modalLogoutVisivel, setModalLogoutVisivel] = useState(false);
+  const [saindoConta, setSaindoConta] = useState(false);
+
   useEffect(() => {
     refreshUserProfile();
   }, []);
@@ -124,14 +132,16 @@ export function Perfil() {
   const avatarAtual = user?.profilePictureUrl || DEFAULT_AVATAR;
 
   const handleEscolherFotoGaleria = async () => {
+    setFeedbackGeral(null);
     try {
       const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permissao.granted) {
-        Alert.alert(
-          'Permissão necessária',
-          'Precisamos de permissão para acessar as fotos da sua galeria.'
-        );
+        setFeedbackGeral({
+          type: 'warning',
+          title: 'Permissão necessária',
+          message: 'Precisamos de permissão para acessar as fotos da sua galeria.',
+        });
         return;
       }
 
@@ -158,26 +168,40 @@ export function Perfil() {
         profilePictureUrl: fotoDataUri,
       });
       await refreshUserProfile();
-      Alert.alert('Sucesso', 'Foto do perfil atualizada com sucesso!');
+      setFeedbackGeral({
+        type: 'success',
+        title: 'Foto atualizada',
+        message: 'Foto do perfil atualizada com sucesso!',
+      });
     } catch (error) {
-      Alert.alert(
-        'Erro',
-        getApiErrorMessage(error, 'Não foi possível atualizar a foto do perfil.')
-      );
+      setFeedbackGeral({
+        type: 'error',
+        title: 'Erro ao atualizar foto',
+        message: getApiErrorMessage(error, 'Não foi possível atualizar a foto do perfil.'),
+      });
     } finally {
       setSalvandoFoto(false);
     }
   };
 
   const handleSalvarDados = async () => {
+    setFeedbackDados(null);
     const telefoneLimpo = telefone.replace(/\D/g, '');
     if (!nome.trim() || !telefoneLimpo) {
-      Alert.alert('Campos obrigatórios', 'Nome e telefone não podem ficar vazios.');
+      setFeedbackDados({
+        type: 'warning',
+        title: 'Campos obrigatórios',
+        message: 'Nome e telefone não podem ficar vazios.',
+      });
       return;
     }
 
     if (cargo === Role.OUTROS && !customRole.trim()) {
-      Alert.alert('Campo obrigatório', 'Informe a descrição do seu cargo.');
+      setFeedbackDados({
+        type: 'warning',
+        title: 'Campo obrigatório',
+        message: 'Informe a descrição do seu cargo.',
+      });
       return;
     }
 
@@ -191,30 +215,49 @@ export function Perfil() {
       });
       await refreshUserProfile();
       setEditandoDados(false);
-      Alert.alert('Sucesso', 'Seus dados foram atualizados com sucesso!');
+      setFeedbackDados(null);
+      setFeedbackGeral({
+        type: 'success',
+        title: 'Dados atualizados',
+        message: 'Seus dados foram atualizados com sucesso!',
+      });
     } catch (error) {
-      Alert.alert(
-        'Erro ao Atualizar',
-        getApiErrorMessage(error, 'Não foi possível atualizar seus dados.')
-      );
+      setFeedbackDados({
+        type: 'error',
+        title: 'Erro ao atualizar',
+        message: getApiErrorMessage(error, 'Não foi possível atualizar seus dados.'),
+      });
     } finally {
       setSalvandoDados(false);
     }
   };
 
   const handleSalvarSenha = async () => {
+    setFeedbackSenha(null);
     if (!senhaAtual || !novaSenha || !confirmarSenha) {
-      Alert.alert('Campos obrigatórios', 'Preencha a senha atual, a nova senha e a confirmação.');
+      setFeedbackSenha({
+        type: 'warning',
+        title: 'Campos obrigatórios',
+        message: 'Preencha a senha atual, a nova senha e a confirmação.',
+      });
       return;
     }
 
-    if (novaSenha.length < 4) {
-      Alert.alert('Senha curta', 'A nova senha deve ter pelo menos 4 caracteres.');
+    if (novaSenha.length < 6) {
+      setFeedbackSenha({
+        type: 'warning',
+        title: 'Senha curta',
+        message: 'A nova senha deve ter pelo menos 6 caracteres.',
+      });
       return;
     }
 
     if (novaSenha !== confirmarSenha) {
-      Alert.alert('Atenção', 'A confirmação da nova senha não confere.');
+      setFeedbackSenha({
+        type: 'warning',
+        title: 'Senhas divergentes',
+        message: 'A confirmação da nova senha não confere.',
+      });
       return;
     }
 
@@ -228,32 +271,35 @@ export function Perfil() {
       setNovaSenha('');
       setConfirmarSenha('');
       setEditandoSenha(false);
-      Alert.alert('Sucesso', 'Sua senha foi alterada com sucesso!');
+      setFeedbackSenha(null);
+      setFeedbackGeral({
+        type: 'success',
+        title: 'Senha alterada',
+        message: 'Sua senha foi alterada com sucesso!',
+      });
     } catch (error) {
-      Alert.alert(
-        'Erro ao Alterar Senha',
-        getApiErrorMessage(error, 'Não foi possível alterar a senha. Verifique sua senha atual.')
-      );
+      setFeedbackSenha({
+        type: 'error',
+        title: 'Erro ao alterar senha',
+        message: getApiErrorMessage(error, 'Não foi possível alterar a senha. Verifique sua senha atual.'),
+      });
     } finally {
       setSalvandoSenha(false);
     }
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Encerrar Sessão',
-      'Tem certeza de que deseja sair da sua conta?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Sim, Sair',
-          style: 'destructive',
-          onPress: async () => {
-            await signOut();
-          },
-        },
-      ]
-    );
+    setModalLogoutVisivel(true);
+  };
+
+  const handleConfirmarLogout = async () => {
+    setSaindoConta(true);
+    try {
+      await signOut();
+    } finally {
+      setSaindoConta(false);
+      setModalLogoutVisivel(false);
+    }
   };
 
   return (
@@ -328,6 +374,8 @@ export function Perfil() {
         ]}
         showsVerticalScrollIndicator={false}
       >
+        <FeedbackBanner feedback={feedbackGeral} onDismiss={() => setFeedbackGeral(null)} />
+
         {/* Card: Informações da Conta e Edição de Dados */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeaderRow}>
@@ -431,13 +479,18 @@ export function Perfil() {
                 </View>
               )}
 
+              <FeedbackBanner feedback={feedbackDados} onDismiss={() => setFeedbackDados(null)} />
+
               <View style={styles.actionButtonsRow}>
                 <Pressable
                   style={({ pressed }) => [
                     styles.cancelButton,
                     pressed && styles.cancelButtonPressed,
                   ]}
-                  onPress={() => setEditandoDados(false)}
+                  onPress={() => {
+                    setFeedbackDados(null);
+                    setEditandoDados(false);
+                  }}
                   disabled={salvandoDados}
                 >
                   <Text style={styles.cancelButtonText}>Cancelar</Text>
@@ -571,6 +624,8 @@ export function Perfil() {
                 </View>
               </View>
 
+              <FeedbackBanner feedback={feedbackSenha} onDismiss={() => setFeedbackSenha(null)} />
+
               <Pressable
                 style={({ pressed }) => [
                   styles.saveButtonFull,
@@ -645,6 +700,17 @@ export function Perfil() {
           </Pressable>
         </Pressable>
       </Modal>
+      <ConfirmModal
+        visible={modalLogoutVisivel}
+        title="Encerrar Sessão"
+        message="Tem certeza de que deseja sair da sua conta?"
+        confirmLabel="Sim, Sair"
+        cancelLabel="Cancelar"
+        destructive
+        isLoading={saindoConta}
+        onConfirm={handleConfirmarLogout}
+        onCancel={() => setModalLogoutVisivel(false)}
+      />
     </KeyboardAvoidingView>
   );
 }

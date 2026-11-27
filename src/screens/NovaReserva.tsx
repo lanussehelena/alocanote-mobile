@@ -5,7 +5,6 @@ import {
   TextInput,
   ScrollView,
   StyleSheet,
-  Alert,
   Pressable,
   ActivityIndicator,
   Modal,
@@ -23,6 +22,7 @@ import { getApiErrorMessage, isUnauthorizedError } from '../services/api';
 import { NotebookResponseDTO, NotebookStatus } from '../types';
 import { AppStackParamList } from '../types/navigation';
 import { PrimaryButton } from '../components/PrimaryButton/PrimaryButton';
+import { FeedbackBanner, FeedbackState } from '../components/FeedbackBanner/FeedbackBanner';
 
 type NovaReservaNavProp = NativeStackNavigationProp<AppStackParamList, 'NovaReserva'>;
 type NovaReservaRouteProp = RouteProp<AppStackParamList, 'NovaReserva'>;
@@ -48,6 +48,7 @@ export function NovaReserva() {
 
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState<FeedbackState | null>(null);
 
   const [modalNotebookVisible, setModalNotebookVisible] = useState(false);
 
@@ -80,7 +81,11 @@ export function NovaReserva() {
       } catch (error) {
         if (isUnauthorizedError(error)) return;
         const mensagem = getApiErrorMessage(error, 'Erro ao carregar dados para a reserva.');
-        Alert.alert('Erro', mensagem);
+        setFeedback({
+          type: 'error',
+          title: 'Erro ao carregar',
+          message: mensagem,
+        });
       } finally {
         setIsLoadingData(false);
       }
@@ -162,8 +167,14 @@ export function NovaReserva() {
   };
 
   const handleAgendar = async () => {
+    setFeedback(null);
+
     if (!selectedNotebook) {
-      Alert.alert('Equipamento', 'Selecione um notebook disponível.');
+      setFeedback({
+        type: 'warning',
+        title: 'Equipamento obrigatório',
+        message: 'Selecione um notebook disponível.',
+      });
       return;
     }
 
@@ -171,20 +182,29 @@ export function NovaReserva() {
     const isoTermino = converterParaISO(dataTermino, horaTermino);
 
     if (!isoInicio || !isoTermino) {
-      Alert.alert(
-        'Data Inválida',
-        'Por favor, preencha as datas no formato DD/MM/AAAA e horários no formato HH:mm.'
-      );
+      setFeedback({
+        type: 'warning',
+        title: 'Data ou horário inválido',
+        message: 'Por favor, preencha as datas no formato DD/MM/AAAA e horários no formato HH:mm.',
+      });
       return;
     }
 
     if (new Date(isoTermino) <= new Date(isoInicio)) {
-      Alert.alert('Horário Inválido', 'A data de término deve ser posterior à data de início.');
+      setFeedback({
+        type: 'warning',
+        title: 'Horário inválido',
+        message: 'A data de término deve ser posterior à data de início.',
+      });
       return;
     }
 
     if (!purpose.trim()) {
-      Alert.alert('Motivo Obrigatório', 'Informe a justificativa ou finalidade do uso.');
+      setFeedback({
+        type: 'warning',
+        title: 'Motivo obrigatório',
+        message: 'Informe a justificativa ou finalidade do uso.',
+      });
       return;
     }
 
@@ -198,15 +218,21 @@ export function NovaReserva() {
         purpose: purpose.trim(),
       });
 
-      Alert.alert('Sucesso', 'Reserva agendada com sucesso!', [
-        {
-          text: 'Ver Minhas Reservas',
-          onPress: () => navigation.goBack(),
-        },
-      ]);
+      setPurpose('');
+      setFeedback({
+        type: 'success',
+        title: 'Reserva agendada!',
+        message: 'Sua reserva foi agendada com sucesso.',
+        actionLabel: 'Ver Minhas Reservas',
+        onAction: () => navigation.goBack(),
+      });
     } catch (error) {
       const mensagem = getApiErrorMessage(error, 'Não foi possível concluir a reserva.');
-      Alert.alert('Falha ao Agendar', mensagem);
+      setFeedback({
+        type: 'error',
+        title: 'Falha ao agendar',
+        message: mensagem,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -326,6 +352,8 @@ export function NovaReserva() {
               numberOfLines={3}
             />
           </View>
+
+          <FeedbackBanner feedback={feedback} onDismiss={() => setFeedback(null)} />
 
           <PrimaryButton
             title="Confirmar Agendamento"

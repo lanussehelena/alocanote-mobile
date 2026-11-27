@@ -5,7 +5,6 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   Pressable,
   RefreshControl,
   Modal,
@@ -25,6 +24,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { reservationService } from '../services/reservationService';
 import { getApiErrorMessage, isUnauthorizedError } from '../services/api';
 import { ReservationResponseDTO, ReservationStatus } from '../types';
+import { FeedbackBanner, FeedbackState } from '../components/FeedbackBanner/FeedbackBanner';
+import { ConfirmModal } from '../components/ConfirmModal/ConfirmModal';
 
 type LocationOptionType = 'LOJA' | 'OUTRO_LOCAL';
 
@@ -66,6 +67,15 @@ export function MinhasReservas() {
   const [isCapturingPhoto, setIsCapturingPhoto] = useState(false);
   const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
 
+  // Feedbacks em tela e modal de confirmação
+  const [feedback, setFeedback] = useState<FeedbackState | null>(null);
+  const [checkInFeedback, setCheckInFeedback] = useState<FeedbackState | null>(null);
+  const [returnFeedback, setReturnFeedback] = useState<FeedbackState | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{
+    type: 'cancel' | 'delete';
+    reservaId: number;
+  } | null>(null);
+
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const { user, signOut } = useAuth();
@@ -81,7 +91,11 @@ export function MinhasReservas() {
     } catch (error) {
       if (isUnauthorizedError(error)) return;
       const mensagem = getApiErrorMessage(error, 'Erro ao buscar suas reservas.');
-      Alert.alert('Erro', mensagem);
+      setFeedback({
+        type: 'error',
+        title: 'Erro ao carregar reservas',
+        message: mensagem,
+      });
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -165,21 +179,26 @@ export function MinhasReservas() {
   };
 
   const obterPosicaoAtualDispositivo = async (
-    mostrarAlerta = false
+    mostrarAlerta = false,
+    onFeedback?: (msg: FeedbackState) => void
   ): Promise<{
     latitude: number;
     longitude: number;
     address: string;
   } | null> => {
+    const emitirFeedback = onFeedback || setFeedback;
+
     // 1. Usa o GPS nativo via expo-location (Android / iOS / Web)
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         if (mostrarAlerta) {
-          Alert.alert(
-            'Permissão de Localização',
-            'Permita o acesso à localização (GPS) nas configurações do aparelho para detectar seu endereço atual com precisão.'
-          );
+          emitirFeedback({
+            type: 'warning',
+            title: 'Permissão de localização',
+            message:
+              'Permita o acesso à localização (GPS) nas configurações do aparelho para detectar seu endereço atual com precisão.',
+          });
         }
         return null;
       }
@@ -187,10 +206,12 @@ export function MinhasReservas() {
       const servicoAtivo = await Location.hasServicesEnabledAsync();
       if (!servicoAtivo) {
         if (mostrarAlerta) {
-          Alert.alert(
-            'GPS Desativado',
-            'Ative a localização (GPS) do seu aparelho e tente tocar em "Detectar Local" novamente.'
-          );
+          emitirFeedback({
+            type: 'warning',
+            title: 'GPS desativado',
+            message:
+              'Ative a localização (GPS) do seu aparelho e tente tocar em "Detectar Local" novamente.',
+          });
         }
         return null;
       }
@@ -240,17 +261,20 @@ export function MinhasReservas() {
         return { latitude: coords.latitude, longitude: coords.longitude, address };
       } catch {
         if (mostrarAlerta) {
-          Alert.alert(
-            'Não foi possível detectar o local',
-            'Verifique se a permissão de localização e o GPS estão ativados ou digite o CEP/endereço manualmente.'
-          );
+          emitirFeedback({
+            type: 'warning',
+            title: 'Não foi possível detectar o local',
+            message:
+              'Verifique se a permissão de localização e o GPS estão ativados ou digite o CEP/endereço manualmente.',
+          });
         }
       }
     } else if (mostrarAlerta) {
-      Alert.alert(
-        'Não foi possível detectar o local',
-        'Verifique se o GPS está ativado ou digite o CEP/endereço manualmente.'
-      );
+      emitirFeedback({
+        type: 'warning',
+        title: 'Não foi possível detectar o local',
+        message: 'Verifique se o GPS está ativado ou digite o CEP/endereço manualmente.',
+      });
     }
 
     return null;
@@ -335,7 +359,8 @@ export function MinhasReservas() {
   const abrirNoGoogleMaps = async (
     lat?: number | null,
     lng?: number | null,
-    endereco?: string | null
+    endereco?: string | null,
+    onFeedback?: (msg: FeedbackState) => void
   ) => {
     let url = 'https://www.google.com/maps';
     if (lat != null && lng != null) {
@@ -347,7 +372,12 @@ export function MinhasReservas() {
     try {
       await Linking.openURL(url);
     } catch {
-      Alert.alert('Erro', 'Não foi possível abrir o Google Maps neste dispositivo.');
+      const emitirFeedback = onFeedback || setFeedback;
+      emitirFeedback({
+        type: 'error',
+        title: 'Erro ao abrir mapa',
+        message: 'Não foi possível abrir o Google Maps neste dispositivo.',
+      });
     }
   };
 
@@ -358,8 +388,11 @@ export function MinhasReservas() {
   ) => {
     setIsGettingCheckInLocation(true);
     setCheckInSuggestions([]);
+    if (manual) {
+      setCheckInFeedback(null);
+    }
     try {
-      const pos = await obterPosicaoAtualDispositivo(manual);
+      const pos = await obterPosicaoAtualDispositivo(manual, setCheckInFeedback);
       if (pos) {
         setCheckInLatitude(pos.latitude);
         setCheckInLongitude(pos.longitude);
@@ -373,8 +406,13 @@ export function MinhasReservas() {
   };
 
   const buscarEnderecoCheckInNoGoogle = async () => {
+    setCheckInFeedback(null);
     if (!checkInAddress.trim()) {
-      Alert.alert('Endereço', 'Digite um endereço, CEP ou nome do local para buscar.');
+      setCheckInFeedback({
+        type: 'warning',
+        title: 'Endereço vazio',
+        message: 'Digite um endereço, CEP ou nome do local para buscar.',
+      });
       return;
     }
 
@@ -388,10 +426,12 @@ export function MinhasReservas() {
         setCheckInLatitude(parseFloat(primeiro.lat));
         setCheckInLongitude(parseFloat(primeiro.lon));
       } else {
-        Alert.alert(
-          'Endereço Definido',
-          'Você pode tocar em "Confirmar no Google Maps" para visualizar o local diretamente no Google Maps.'
-        );
+        setCheckInFeedback({
+          type: 'info',
+          title: 'Endereço definido',
+          message:
+            'Você pode tocar em "Confirmar no Google Maps" para visualizar o local diretamente no Google Maps.',
+        });
       }
     } finally {
       setIsGettingCheckInLocation(false);
@@ -399,6 +439,7 @@ export function MinhasReservas() {
   };
 
   const handleAbrirCheckIn = (reserva: ReservationResponseDTO) => {
+    setCheckInFeedback(null);
     setSelectedReservaCheckIn(reserva);
     const isLoja = reserva.locationName?.toLowerCase().includes('loja') ?? true;
     setCheckInLocationType(isLoja ? 'LOJA' : 'OUTRO_LOCAL');
@@ -412,13 +453,15 @@ export function MinhasReservas() {
 
   const handleConfirmarCheckIn = async () => {
     if (!selectedReservaCheckIn) return;
+    setCheckInFeedback(null);
 
     const enderecoFinal = checkInAddress.trim();
     if (!enderecoFinal) {
-      Alert.alert(
-        'Local Obrigatório',
-        'Confirme o endereço ou referência do local de retirada antes de concluir o check-in.'
-      );
+      setCheckInFeedback({
+        type: 'warning',
+        title: 'Local obrigatório',
+        message: 'Confirme o endereço ou referência do local de retirada antes de concluir o check-in.',
+      });
       return;
     }
 
@@ -432,18 +475,23 @@ export function MinhasReservas() {
         longitude: checkInLongitude,
       });
 
+      const localTipoTexto = checkInLocationType === 'LOJA' ? 'Na Loja' : 'Outro Local';
       setCheckInModalVisible(false);
       setSelectedReservaCheckIn(null);
-      Alert.alert(
-        'Check-in Realizado!',
-        `Retirada registrada com sucesso (${
-          checkInLocationType === 'LOJA' ? 'Na Loja' : 'Outro Local'
-        }). Bom trabalho!`
-      );
+      setCheckInFeedback(null);
+      setFeedback({
+        type: 'success',
+        title: 'Check-in realizado!',
+        message: `Retirada registrada com sucesso (${localTipoTexto}). Bom trabalho!`,
+      });
       await carregarReservas();
     } catch (error) {
       const mensagem = getApiErrorMessage(error, 'Não foi possível realizar o check-in.');
-      Alert.alert('Falha no Check-in', mensagem);
+      setCheckInFeedback({
+        type: 'error',
+        title: 'Falha no check-in',
+        message: mensagem,
+      });
     } finally {
       setIsSubmittingCheckIn(false);
       setLoadingActionId(null);
@@ -454,8 +502,11 @@ export function MinhasReservas() {
   const capturarLocalizacaoDevolucao = async (manual = false) => {
     setIsGettingReturnLocation(true);
     setReturnSuggestions([]);
+    if (manual) {
+      setReturnFeedback(null);
+    }
     try {
-      const pos = await obterPosicaoAtualDispositivo(manual);
+      const pos = await obterPosicaoAtualDispositivo(manual, setReturnFeedback);
       if (pos) {
         setReturnLatitude(pos.latitude);
         setReturnLongitude(pos.longitude);
@@ -467,8 +518,13 @@ export function MinhasReservas() {
   };
 
   const buscarEnderecoDevolucaoNoGoogle = async () => {
+    setReturnFeedback(null);
     if (!returnAddress.trim()) {
-      Alert.alert('Endereço', 'Digite um endereço, CEP ou nome do local para buscar.');
+      setReturnFeedback({
+        type: 'warning',
+        title: 'Endereço vazio',
+        message: 'Digite um endereço, CEP ou nome do local para buscar.',
+      });
       return;
     }
 
@@ -482,10 +538,12 @@ export function MinhasReservas() {
         setReturnLatitude(parseFloat(primeiro.lat));
         setReturnLongitude(parseFloat(primeiro.lon));
       } else {
-        Alert.alert(
-          'Endereço Definido',
-          'Você pode tocar em "Confirmar no Google Maps" para visualizar o local diretamente no Google Maps.'
-        );
+        setReturnFeedback({
+          type: 'info',
+          title: 'Endereço definido',
+          message:
+            'Você pode tocar em "Confirmar no Google Maps" para visualizar o local diretamente no Google Maps.',
+        });
       }
     } finally {
       setIsGettingReturnLocation(false);
@@ -494,6 +552,7 @@ export function MinhasReservas() {
 
   const capturarFotoDevolucao = async (usarGaleriaComoAlternativa = false) => {
     setIsCapturingPhoto(true);
+    setReturnFeedback(null);
     try {
       if (!usarGaleriaComoAlternativa) {
         const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
@@ -521,10 +580,12 @@ export function MinhasReservas() {
       // Fallback para galeria caso esteja em emulador sem câmera ou usuário escolha galeria
       const galleryPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (galleryPermission.status !== 'granted') {
-        Alert.alert(
-          'Permissão Necessária',
-          'Permita o acesso à câmera para registrar a foto automática de devolução do notebook.'
-        );
+        setReturnFeedback({
+          type: 'warning',
+          title: 'Permissão necessária',
+          message:
+            'Permita o acesso à câmera ou galeria para registrar a foto de devolução do notebook.',
+        });
         return;
       }
 
@@ -543,16 +604,19 @@ export function MinhasReservas() {
         }
       }
     } catch {
-      Alert.alert(
-        'Câmera',
-        'Não foi possível abrir a câmera automaticamente. Toque em "Abrir Câmera" ou "Galeria" para anexar a foto do notebook.'
-      );
+      setReturnFeedback({
+        type: 'warning',
+        title: 'Câmera indisponível',
+        message:
+          'Não foi possível abrir a câmera automaticamente. Toque em "Abrir Câmera" ou "Galeria" para anexar a foto do notebook.',
+      });
     } finally {
       setIsCapturingPhoto(false);
     }
   };
 
   const handleAbrirDevolucao = async (reserva: ReservationResponseDTO) => {
+    setReturnFeedback(null);
     setSelectedReservaReturn(reserva);
     const tipoInicial: LocationOptionType =
       reserva.checkInLocationType === 'OUTRO_LOCAL' ? 'OUTRO_LOCAL' : 'LOJA';
@@ -573,28 +637,26 @@ export function MinhasReservas() {
 
   const handleConfirmarDevolucao = async () => {
     if (!selectedReservaReturn) return;
+    setReturnFeedback(null);
 
     const enderecoFinal = returnAddress.trim();
     if (!enderecoFinal) {
-      Alert.alert(
-        'Local da Devolução',
-        'Confirme o endereço ou local onde o notebook está sendo devolvido.'
-      );
+      setReturnFeedback({
+        type: 'warning',
+        title: 'Local da devolução obrigatório',
+        message: 'Confirme o endereço ou local onde o notebook está sendo devolvido.',
+      });
       return;
     }
 
     if (!returnPhotoBase64) {
-      Alert.alert(
-        'Foto Obrigatória na Devolução',
-        'Para concluir a devolução é necessário registrar a foto do notebook.',
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          {
-            text: 'Tirar Foto Agora',
-            onPress: () => capturarFotoDevolucao(false),
-          },
-        ]
-      );
+      setReturnFeedback({
+        type: 'warning',
+        title: 'Foto obrigatória na devolução',
+        message: 'Para concluir a devolução é necessário registrar a foto do notebook.',
+        actionLabel: 'Tirar Foto Agora',
+        onAction: () => capturarFotoDevolucao(false),
+      });
       return;
     }
 
@@ -612,72 +674,73 @@ export function MinhasReservas() {
       setReturnModalVisible(false);
       setSelectedReservaReturn(null);
       setReturnPhotoBase64(null);
-      Alert.alert(
-        'Devolução Registrada!',
-        'O local da devolução e a foto do equipamento foram salvos com sucesso.'
-      );
+      setReturnFeedback(null);
+      setFeedback({
+        type: 'success',
+        title: 'Devolução registrada!',
+        message: 'O local da devolução e a foto do equipamento foram salvos com sucesso.',
+      });
       await carregarReservas();
     } catch (error) {
       const mensagem = getApiErrorMessage(error, 'Não foi possível finalizar a reserva.');
-      Alert.alert('Falha na Devolução', mensagem);
+      setReturnFeedback({
+        type: 'error',
+        title: 'Falha na devolução',
+        message: mensagem,
+      });
     } finally {
       setIsSubmittingReturn(false);
       setLoadingActionId(null);
     }
   };
 
-    const handleExcluirReserva = (reservaId: number) => {
-    Alert.alert(
-      'Excluir Reserva',
-      'Tem certeza de que deseja excluir permanentemente esta reserva? Essa ação é irreversível.',
-      [
-        { text: 'Não', style: 'cancel' },
-        {
-          text: 'Sim, excluir',
-          style: 'destructive',
-          onPress: async () => {
-            setLoadingActionId(reservaId);
-            try {
-              await reservationService.deleteReservation(reservaId);
-              Alert.alert('Sucesso', 'Registro de reserva excluído com sucesso.');
-              await carregarReservas();
-            } catch (error) {
-              const mensagem = getApiErrorMessage(error, 'Não foi possível excluir a reserva.');
-              Alert.alert('Falha', mensagem);
-            } finally {
-              setLoadingActionId(null);
-            }
-          },
-        },
-      ]
-    );
+  const handleExcluirReserva = (reservaId: number) => {
+    setConfirmAction({ type: 'delete', reservaId });
   };
 
-  const handleCancelar = async (reservaId: number) => {
-    Alert.alert(
-      'Cancelar Reserva',
-      'Tem certeza de que deseja cancelar esta reserva?',
-      [
-        { text: 'Não', style: 'cancel' },
-        {
-          text: 'Sim, cancelar',
-          style: 'destructive',
-          onPress: async () => {
-            setLoadingActionId(reservaId);
-            try {
-              await reservationService.cancelReservation(reservaId);
-              Alert.alert('Sucesso', 'Reserva cancelada.');
-              await carregarReservas();
-            } catch (error) {
-              const mensagem = getApiErrorMessage(error, 'Não foi possível cancelar a reserva.');
-              Alert.alert('Falha', mensagem);
-            } finally {
-              setLoadingActionId(null);
-            }
-          },
-        },
-      ]
-    );
+  const handleCancelar = (reservaId: number) => {
+    setConfirmAction({ type: 'cancel', reservaId });
+  };
+
+  const handleConfirmarAcaoReserva = async () => {
+    if (!confirmAction) return;
+    const { type, reservaId } = confirmAction;
+    setLoadingActionId(reservaId);
+    try {
+      if (type === 'delete') {
+        await reservationService.deleteReservation(reservaId);
+        setConfirmAction(null);
+        setFeedback({
+          type: 'success',
+          title: 'Reserva excluída',
+          message: 'Registro de reserva excluído com sucesso.',
+        });
+      } else {
+        await reservationService.cancelReservation(reservaId);
+        setConfirmAction(null);
+        setFeedback({
+          type: 'success',
+          title: 'Reserva cancelada',
+          message: 'A reserva foi cancelada com sucesso.',
+        });
+      }
+      await carregarReservas();
+    } catch (error) {
+      setConfirmAction(null);
+      const mensagem = getApiErrorMessage(
+        error,
+        type === 'delete'
+          ? 'Não foi possível excluir a reserva.'
+          : 'Não foi possível cancelar a reserva.'
+      );
+      setFeedback({
+        type: 'error',
+        title: type === 'delete' ? 'Falha ao excluir' : 'Falha ao cancelar',
+        message: mensagem,
+      });
+    } finally {
+      setLoadingActionId(null);
+    }
   };
 
   const formatarData = (isoDate?: string | null) => {
@@ -947,6 +1010,12 @@ export function MinhasReservas() {
         </Text>
       </View>
 
+      {feedback ? (
+        <View style={styles.feedbackWrapper}>
+          <FeedbackBanner feedback={feedback} onDismiss={() => setFeedback(null)} />
+        </View>
+      ) : null}
+
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#7E22CE" />
@@ -1086,7 +1155,12 @@ export function MinhasReservas() {
                       pressed && styles.googleSmallButtonPressed,
                     ]}
                     onPress={() =>
-                      abrirNoGoogleMaps(checkInLatitude, checkInLongitude, checkInAddress)
+                      abrirNoGoogleMaps(
+                        checkInLatitude,
+                        checkInLongitude,
+                        checkInAddress,
+                        setCheckInFeedback
+                      )
                     }
                   >
                     <Text style={styles.googleMapsOpenBtnText}>🗺️ Confirmar no Google Maps</Text>
@@ -1136,6 +1210,12 @@ export function MinhasReservas() {
                   ))}
                 </View>
               )}
+
+              <FeedbackBanner
+                feedback={checkInFeedback}
+                onDismiss={() => setCheckInFeedback(null)}
+                style={{ marginTop: 12 }}
+              />
 
               <View style={styles.modalFooterButtons}>
                 <Pressable
@@ -1330,7 +1410,12 @@ export function MinhasReservas() {
                       pressed && styles.googleSmallButtonPressed,
                     ]}
                     onPress={() =>
-                      abrirNoGoogleMaps(returnLatitude, returnLongitude, returnAddress)
+                      abrirNoGoogleMaps(
+                        returnLatitude,
+                        returnLongitude,
+                        returnAddress,
+                        setReturnFeedback
+                      )
                     }
                   >
                     <Text style={styles.googleMapsOpenBtnText}>🗺️ Confirmar no Google Maps</Text>
@@ -1381,6 +1466,12 @@ export function MinhasReservas() {
                 </View>
               )}
 
+              <FeedbackBanner
+                feedback={returnFeedback}
+                onDismiss={() => setReturnFeedback(null)}
+                style={{ marginTop: 12 }}
+              />
+
               <View style={styles.modalFooterButtons}>
                 <Pressable
                   style={({ pressed }) => [
@@ -1413,6 +1504,22 @@ export function MinhasReservas() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      <ConfirmModal
+        visible={Boolean(confirmAction)}
+        title={confirmAction?.type === 'delete' ? 'Excluir Reserva' : 'Cancelar Reserva'}
+        message={
+          confirmAction?.type === 'delete'
+            ? 'Tem certeza de que deseja excluir permanentemente esta reserva? Essa ação é irreversível.'
+            : 'Tem certeza de que deseja cancelar esta reserva?'
+        }
+        confirmLabel={confirmAction?.type === 'delete' ? 'Sim, excluir' : 'Sim, cancelar'}
+        cancelLabel="Não"
+        destructive
+        isLoading={Boolean(confirmAction && loadingActionId === confirmAction.reservaId)}
+        onConfirm={handleConfirmarAcaoReserva}
+        onCancel={() => setConfirmAction(null)}
+      />
     </View>
   );
 }
@@ -1462,6 +1569,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
     fontWeight: '500',
+  },
+  feedbackWrapper: {
+    width: '100%',
+    maxWidth: 960,
+    alignSelf: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
   listContent: {
     padding: 16,
