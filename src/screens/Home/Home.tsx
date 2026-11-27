@@ -15,6 +15,7 @@ import {
 } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
+import { dataCy } from '../../utils/dataCy';
 import { styles } from './Home.styles';
 
 interface HomeProps {
@@ -47,7 +48,7 @@ export function Home({ navigation }: HomeProps) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} {...dataCy('painel-principal')}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[

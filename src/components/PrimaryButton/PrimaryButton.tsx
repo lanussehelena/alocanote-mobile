@@ -8,6 +8,8 @@ export interface PrimaryButtonProps extends PressableProps {
   variant?: 'primary' | 'danger' | 'secondary' | 'outline';
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
+  dataSet?: Record<string, any>;
+  'data-cy'?: string;
 }
 
 export function PrimaryButton({
@@ -17,9 +19,15 @@ export function PrimaryButton({
   disabled,
   style,
   textStyle,
+  dataSet,
+  'data-cy': dataCyProp,
+  testID,
   ...rest
 }: PrimaryButtonProps) {
   const isButtonDisabled = disabled || isLoading;
+  const cyId = dataCyProp || (dataSet?.cy as string | undefined);
+  const resolvedDataSet = cyId ? { ...dataSet, cy: cyId } : dataSet;
+  const resolvedTestID = testID || cyId;
 
   return (
     <Pressable
@@ -31,6 +39,9 @@ export function PrimaryButton({
         style,
       ]}
       disabled={isButtonDisabled}
+      dataSet={resolvedDataSet}
+      testID={resolvedTestID}
+      {...(cyId ? { 'data-cy': cyId } : {})}
       {...rest}
     >
       {isLoading ? (

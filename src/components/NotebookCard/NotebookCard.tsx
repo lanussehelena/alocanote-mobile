@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { Notebook } from '../../types';
+import { dataCy } from '../../utils/dataCy';
 import { styles } from './NotebookCard.styles';
 
 interface NotebookCardProps {
@@ -12,7 +13,7 @@ export function NotebookCard({ notebook, onAgendar }: NotebookCardProps) {
   const isAvailable = notebook.status === 'DISPONIVEL';
 
   return (
-    <View style={styles.cardContainer}>
+    <View style={styles.cardContainer} {...dataCy('card-notebook')}>
       <View style={styles.infoContainer}>
         <View style={styles.iconPlaceholder} />
 
@@ -53,6 +54,7 @@ export function NotebookCard({ notebook, onAgendar }: NotebookCardProps) {
         ]}
         onPress={() => onAgendar(notebook.id)}
         disabled={!isAvailable}
+        {...dataCy('btn-reservar')}
       >
         <Text style={styles.buttonText}>Agendar</Text>
       </Pressable>

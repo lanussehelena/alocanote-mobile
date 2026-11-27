@@ -23,6 +23,7 @@ import { AuthStackParamList } from '../../types/navigation';
 import { PAISES, Pais } from '../../constants/paises';
 import { SeletorPais } from '../../components/SeletorPais/SeletorPais';
 import { PrimaryButton } from '../../components/PrimaryButton/PrimaryButton';
+import { dataCy } from '../../utils/dataCy';
 import { styles } from './Cadastro.styles';
 
 interface CargoItem {
@@ -58,6 +59,7 @@ export function Cadastro() {
   const [outroCargo, setOutroCargo] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const aplicarMascaraTelefone = (valor: string) => {
     let apenasNumeros = valor.replace(/\D/g, '');
@@ -71,23 +73,30 @@ export function Cadastro() {
   };
 
   const handleCadastro = async () => {
+    setErrorMessage('');
     const nomeLimpo = nome.trim();
     const emailLimpo = email.trim().toLowerCase();
     const confirmarEmailLimpo = confirmarEmail.trim().toLowerCase();
     const senhaLimpa = senha.trim();
 
     if (!nomeLimpo || !emailLimpo || !confirmarEmailLimpo || !senhaLimpa) {
-      Alert.alert('Campos obrigatórios', 'Por favor, preencha nome, e-mail, confirmação de e-mail e senha.');
+      const msg = 'Por favor, preencha nome, e-mail, confirmação de e-mail e senha.';
+      setErrorMessage(msg);
+      Alert.alert('Campos obrigatórios', msg);
       return;
     }
 
     if (emailLimpo !== confirmarEmailLimpo) {
-      Alert.alert('E-mails não coincidem', 'O e-mail digitado e a confirmação de e-mail devem ser iguais.');
+      const msg = 'O e-mail digitado e a confirmação de e-mail devem ser iguais.';
+      setErrorMessage(msg);
+      Alert.alert('E-mails não coincidem', msg);
       return;
     }
 
     if (cargoSelecionado.chave === Role.OUTROS && !outroCargo.trim()) {
-      Alert.alert('Campo obrigatório', 'Por favor, digite qual é o seu cargo.');
+      const msg = 'Por favor, digite qual é o seu cargo.';
+      setErrorMessage(msg);
+      Alert.alert('Campo obrigatório', msg);
       return;
     }
 
@@ -115,6 +124,7 @@ export function Cadastro() {
     } catch (error: any) {
       console.error('Erro ao cadastrar usuário:', error);
       const mensagem = getApiErrorMessage(error, 'Não foi possível realizar o cadastro.');
+      setErrorMessage(mensagem);
       Alert.alert('Erro no Cadastro', mensagem);
     } finally {
       setIsLoading(false);
@@ -158,6 +168,7 @@ export function Cadastro() {
                 placeholderTextColor="#7E758C"
                 value={nome}
                 onChangeText={setNome}
+                {...dataCy('input-nome')}
               />
             </View>
 
@@ -172,6 +183,7 @@ export function Cadastro() {
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="email-address"
+                {...dataCy('input-email')}
               />
             </View>
 
@@ -186,6 +198,7 @@ export function Cadastro() {
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="email-address"
+                {...dataCy('input-confirmar-email')}
               />
             </View>
 
@@ -201,6 +214,7 @@ export function Cadastro() {
                   secureTextEntry={!mostrarSenha}
                   autoCapitalize="none"
                   autoCorrect={false}
+                  {...dataCy('input-senha')}
                 />
                 <Pressable
                   onPress={() => setMostrarSenha((prev) => !prev)}
@@ -257,10 +271,17 @@ export function Cadastro() {
               )}
             </View>
 
+            {!!errorMessage && (
+              <View style={styles.errorContainer} {...dataCy('mensagem-erro')}>
+                <Text style={styles.errorText}>{errorMessage}</Text>
+              </View>
+            )}
+
             <PrimaryButton
               title="Cadastrar"
               onPress={handleCadastro}
               isLoading={isLoading}
+              {...dataCy('btn-cadastrar')}
             />
 
             <Pressable

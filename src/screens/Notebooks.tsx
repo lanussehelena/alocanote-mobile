@@ -22,6 +22,7 @@ import { getApiErrorMessage, isUnauthorizedError } from '../services/api';
 import { NotebookResponseDTO, NotebookStatus, CreateNotebookRequestDTO } from '../types';
 import { AppStackParamList } from '../types/navigation';
 import { useAuth } from '../contexts/AuthContext';
+import { dataCy } from '../utils/dataCy';
 
 type NotebooksNavProp = NativeStackNavigationProp<AppStackParamList>;
 
@@ -173,7 +174,7 @@ export function Notebooks() {
     const isDisponivel = item.status === NotebookStatus.DISPONIVEL;
 
     return (
-      <View style={[styles.card, isDesktop && styles.cardDesktop]}>
+      <View style={[styles.card, isDesktop && styles.cardDesktop]} {...dataCy('card-notebook')}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>{item.name}</Text>
           <View style={[styles.badge, { backgroundColor: getStatusColor(item.status) + '1A' }]}>
@@ -189,6 +190,7 @@ export function Notebooks() {
           <Pressable
             style={({ pressed }) => [styles.reserveButton, pressed && styles.reserveButtonPressed]}
             onPress={() => navigation.navigate('NovaReserva', { notebookId: item.id })}
+            {...dataCy('btn-reservar')}
           >
             <Text style={styles.reserveButtonText}>Reservar Equipamento</Text>
           </Pressable>
@@ -227,7 +229,7 @@ export function Notebooks() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} {...dataCy('painel-principal')}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
         <View style={styles.headerTop}>

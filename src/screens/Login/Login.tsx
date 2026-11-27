@@ -18,6 +18,7 @@ import { getApiErrorMessage, wakeUpBackend } from '../../services/api';
 import { isEmailNotVerifiedError } from '../../services/authService';
 import { AuthStackParamList } from '../../types/navigation';
 import { PrimaryButton } from '../../components/PrimaryButton/PrimaryButton';
+import { dataCy } from '../../utils/dataCy';
 import { styles } from './Login.styles';
 
 type LoginNavProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
@@ -29,6 +30,7 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const { signIn } = useAuth();
   const navigation = useNavigation<LoginNavProp>();
@@ -46,10 +48,13 @@ export function Login() {
   }, [route.params?.email]);
 
   const handleLogin = async () => {
+    setErrorMessage('');
     const emailLimpo = email.trim().toLowerCase();
 
     if (!emailLimpo || !password) {
-      Alert.alert('Campos obrigatórios', 'Por favor, preencha o e-mail e a senha.');
+      const msg = 'Por favor, preencha o e-mail e a senha.';
+      setErrorMessage(msg);
+      Alert.alert('Campos obrigatórios', msg);
       return;
     }
 
@@ -73,6 +78,7 @@ export function Login() {
         error,
         'Credenciais inválidas ou não foi possível conectar ao servidor.'
       );
+      setErrorMessage(mensagem);
       Alert.alert('Erro na Autenticação', mensagem);
     } finally {
       setIsLoading(false);
@@ -115,6 +121,7 @@ export function Login() {
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="email-address"
+              {...dataCy('input-email')}
             />
 
             <Text style={styles.label}>Senha</Text>
@@ -128,6 +135,7 @@ export function Login() {
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
+                {...dataCy('input-senha')}
               />
               <Pressable
                 onPress={() => setShowPassword((prev) => !prev)}
@@ -143,10 +151,17 @@ export function Login() {
             </View>
           </View>
 
+          {!!errorMessage && (
+            <View style={styles.errorContainer} {...dataCy('mensagem-erro')}>
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          )}
+
           <PrimaryButton
             title="Entrar"
             onPress={handleLogin}
             isLoading={isLoading}
+            {...dataCy('btn-entrar')}
           />
 
           <Pressable
