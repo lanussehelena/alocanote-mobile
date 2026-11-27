@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/authService';
@@ -145,142 +145,160 @@ export function Cadastro() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <SafeAreaView
       style={[styles.screenWrapper, isDesktop && styles.screenWrapperDesktop]}
+      edges={['top', 'left', 'right']}
     >
-      <ScrollView
-        contentContainerStyle={[styles.container, { paddingBottom: 24 + insets.bottom }]}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.keyboardContainer}
       >
-        <View style={[styles.contentBox, isDesktop && styles.contentBoxDesktop]}>
-          <Text style={styles.title}>Criar Conta</Text>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[
+            styles.container,
+            !isDesktop && styles.containerMobile,
+            { paddingBottom: 24 + insets.bottom },
+          ]}
+          horizontal={false}
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
+          bounces={false}
+          alwaysBounceVertical={false}
+          alwaysBounceHorizontal={false}
+          overScrollMode="never"
+          directionalLockEnabled
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={[styles.contentBox, isDesktop && styles.contentBoxDesktop]}>
+            <Text style={styles.title}>Criar Conta</Text>
 
-          <View style={styles.blocoCampo}>
-            <Text style={styles.labelCampo}>Nome Completo</Text>
-            <TextInput
-              style={styles.inputLilas}
-              placeholder="Digite seu nome completo"
-              placeholderTextColor="#7E758C"
-              value={nome}
-              onChangeText={setNome}
-            />
-          </View>
-
-          <View style={styles.blocoCampo}>
-            <Text style={styles.labelCampo}>E-mail</Text>
-            <TextInput
-              style={styles.inputLilas}
-              placeholder="Digite seu e-mail"
-              placeholderTextColor="#7E758C"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-            />
-          </View>
-
-          <View style={styles.blocoCampo}>
-            <Text style={styles.labelCampo}>Confirmar E-mail</Text>
-            <TextInput
-              style={styles.inputLilas}
-              placeholder="Confirme o seu e-mail"
-              placeholderTextColor="#7E758C"
-              value={confirmarEmail}
-              onChangeText={setConfirmarEmail}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-            />
-          </View>
-
-          <View style={styles.blocoCampo}>
-            <Text style={styles.labelCampo}>Senha</Text>
-            <View style={styles.senhaContainer}>
+            <View style={styles.blocoCampo}>
+              <Text style={styles.labelCampo}>Nome Completo</Text>
               <TextInput
-                style={styles.senhaInput}
-                placeholder="Digite sua senha"
+                style={styles.inputLilas}
+                placeholder="Digite seu nome completo"
                 placeholderTextColor="#7E758C"
-                value={senha}
-                onChangeText={setSenha}
-                secureTextEntry={!mostrarSenha}
+                value={nome}
+                onChangeText={setNome}
+              />
+            </View>
+
+            <View style={styles.blocoCampo}>
+              <Text style={styles.labelCampo}>E-mail</Text>
+              <TextInput
+                style={styles.inputLilas}
+                placeholder="Digite seu e-mail"
+                placeholderTextColor="#7E758C"
+                value={email}
+                onChangeText={setEmail}
                 autoCapitalize="none"
                 autoCorrect={false}
+                keyboardType="email-address"
               />
-              <Pressable
-                onPress={() => setMostrarSenha((prev) => !prev)}
-                style={styles.botaoOlho}
-                hitSlop={8}
-              >
-                <Ionicons
-                  name={mostrarSenha ? 'eye-off-outline' : 'eye-outline'}
-                  size={22}
-                  color="#4B0082"
+            </View>
+
+            <View style={styles.blocoCampo}>
+              <Text style={styles.labelCampo}>Confirmar E-mail</Text>
+              <TextInput
+                style={styles.inputLilas}
+                placeholder="Confirme o seu e-mail"
+                placeholderTextColor="#7E758C"
+                value={confirmarEmail}
+                onChangeText={setConfirmarEmail}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+              />
+            </View>
+
+            <View style={styles.blocoCampo}>
+              <Text style={styles.labelCampo}>Senha</Text>
+              <View style={styles.senhaContainer}>
+                <TextInput
+                  style={styles.senhaInput}
+                  placeholder="Digite sua senha"
+                  placeholderTextColor="#7E758C"
+                  value={senha}
+                  onChangeText={setSenha}
+                  secureTextEntry={!mostrarSenha}
+                  autoCapitalize="none"
+                  autoCorrect={false}
                 />
+                <Pressable
+                  onPress={() => setMostrarSenha((prev) => !prev)}
+                  style={styles.botaoOlho}
+                  hitSlop={8}
+                >
+                  <Ionicons
+                    name={mostrarSenha ? 'eye-off-outline' : 'eye-outline'}
+                    size={22}
+                    color="#4B0082"
+                  />
+                </Pressable>
+              </View>
+            </View>
+
+            <View style={styles.blocoCampo}>
+              <Text style={styles.labelCampo}>Telefone (opcional)</Text>
+              <View style={styles.telefoneContainer}>
+                <SeletorPais
+                  paisSelecionado={paisSelecionado}
+                  onSelecionarPais={setPaisSelecionado}
+                />
+                <TextInput
+                  style={styles.telefoneInput}
+                  placeholder="(  ) "
+                  placeholderTextColor="#7E758C"
+                  keyboardType="phone-pad"
+                  value={telefone}
+                  onChangeText={aplicarMascaraTelefone}
+                  maxLength={15}
+                />
+              </View>
+            </View>
+
+            <View style={styles.blocoCampo}>
+              <Text style={styles.labelCampo}>Cargo</Text>
+              <Pressable
+                style={({ pressed }) => [styles.selectCargo, pressed && styles.selectCargoPressed]}
+                onPress={() => setModalCargoVisivel(true)}
+              >
+                <Text style={styles.textoCargo}>{cargoSelecionado.rotulo}</Text>
+                <Text style={styles.seta}>▼</Text>
               </Pressable>
-            </View>
-          </View>
 
-          <View style={styles.blocoCampo}>
-            <Text style={styles.labelCampo}>Telefone (opcional)</Text>
-            <View style={styles.telefoneContainer}>
-              <SeletorPais
-                paisSelecionado={paisSelecionado}
-                onSelecionarPais={setPaisSelecionado}
-              />
-              <TextInput
-                style={styles.telefoneInput}
-                placeholder="(  ) "
-                placeholderTextColor="#7E758C"
-                keyboardType="phone-pad"
-                value={telefone}
-                onChangeText={aplicarMascaraTelefone}
-                maxLength={15}
-              />
+              {cargoSelecionado.chave === Role.OUTROS && (
+                <TextInput
+                  style={[styles.inputLilas, styles.inputOutroCargo]}
+                  placeholder="Digite o seu cargo"
+                  placeholderTextColor="#7E758C"
+                  value={outroCargo}
+                  onChangeText={setOutroCargo}
+                  autoFocus
+                />
+              )}
             </View>
-          </View>
 
-          <View style={styles.blocoCampo}>
-            <Text style={styles.labelCampo}>Cargo</Text>
+            <PrimaryButton
+              title="Cadastrar"
+              onPress={handleCadastro}
+              isLoading={isLoading}
+            />
+
             <Pressable
-              style={({ pressed }) => [styles.selectCargo, pressed && styles.selectCargoPressed]}
-              onPress={() => setModalCargoVisivel(true)}
+              onPress={() => navigation.navigate('Login')}
+              style={({ pressed }) => [
+                styles.loginPressable,
+                pressed && styles.loginPressed,
+              ]}
             >
-              <Text style={styles.textoCargo}>{cargoSelecionado.rotulo}</Text>
-              <Text style={styles.seta}>▼</Text>
+              <Text style={styles.loginText}>
+                Já tem conta? <Text style={styles.loginLink}>Faça Login</Text>
+              </Text>
             </Pressable>
-
-            {cargoSelecionado.chave === Role.OUTROS && (
-              <TextInput
-                style={[styles.inputLilas, styles.inputOutroCargo]}
-                placeholder="Digite o seu cargo"
-                placeholderTextColor="#7E758C"
-                value={outroCargo}
-                onChangeText={setOutroCargo}
-                autoFocus
-              />
-            )}
           </View>
-
-          <PrimaryButton
-            title="Cadastrar"
-            onPress={handleCadastro}
-            isLoading={isLoading}
-          />
-
-          <Pressable
-            onPress={() => navigation.navigate('Login')}
-            style={({ pressed }) => [
-              styles.loginPressable,
-              pressed && styles.loginPressed,
-            ]}
-          >
-            <Text style={styles.loginText}>
-              Já tem conta? <Text style={styles.loginLink}>Faça Login</Text>
-            </Text>
-          </Pressable>
-        </View>
+        </ScrollView>
 
         <Modal
           visible={modalCargoVisivel}
@@ -323,7 +341,7 @@ export function Cadastro() {
             </Pressable>
           </Pressable>
         </Modal>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
