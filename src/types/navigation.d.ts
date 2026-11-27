@@ -1,6 +1,11 @@
 export type AuthStackParamList = {
   Login: { email?: string } | undefined;
   Cadastro: undefined;
+  VerificarEmail: {
+    email: string;
+    password?: string;
+    verificationEmailSent?: boolean;
+  };
 };
 
 export type AppTabParamList = {
