@@ -219,4 +219,19 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
   },
+  errorContainer: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#EF4444',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    width: '100%',
+  },
+  errorText: {
+    color: '#B91C1C',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
 });

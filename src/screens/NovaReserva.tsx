@@ -23,6 +23,7 @@ import { getApiErrorMessage, isUnauthorizedError } from '../services/api';
 import { NotebookResponseDTO, NotebookStatus } from '../types';
 import { AppStackParamList } from '../types/navigation';
 import { PrimaryButton } from '../components/PrimaryButton/PrimaryButton';
+import { dataCy } from '../utils/dataCy';
 
 type NovaReservaNavProp = NativeStackNavigationProp<AppStackParamList, 'NovaReserva'>;
 type NovaReservaRouteProp = RouteProp<AppStackParamList, 'NovaReserva'>;
@@ -331,6 +332,7 @@ export function NovaReserva() {
             title="Confirmar Agendamento"
             onPress={handleAgendar}
             isLoading={isSubmitting}
+            {...dataCy('btn-reservar')}
           />
         </View>
 
