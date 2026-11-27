@@ -5,7 +5,6 @@ import {
   Pressable,
   Image,
   ScrollView,
-  SafeAreaView,
   useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -48,16 +47,24 @@ export function Home({ navigation }: HomeProps) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: 110 + insets.bottom },
+          { paddingBottom: isDesktop ? 40 : 36 },
         ]}
+        horizontal={false}
         showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        bounces={false}
+        alwaysBounceVertical={false}
+        alwaysBounceHorizontal={false}
+        overScrollMode="never"
+        directionalLockEnabled
       >
         {/* Cabeçalho Curvo Roxo */}
-        <View style={[styles.header, { paddingTop: Math.max(insets.top + 12, 20) }]}>
+        <View style={[styles.header, { paddingTop: Math.max(insets.top + 14, 24) }]}>
           <View style={styles.headerTop}>
             <View style={styles.greetingContainer}>
               <Text style={styles.greetingTitle}>Olá,</Text>
@@ -210,8 +217,9 @@ export function Home({ navigation }: HomeProps) {
           styles.bottomNavContainer,
           isDesktop && styles.bottomNavContainerDesktop,
           {
-            height: (isDesktop ? 78 : 70) + insets.bottom,
-            paddingBottom: insets.bottom,
+            paddingBottom: isDesktop ? 0 : Math.max(insets.bottom, 8),
+            paddingLeft: insets.left,
+            paddingRight: insets.right,
           },
         ]}
       >
@@ -258,6 +266,6 @@ export function Home({ navigation }: HomeProps) {
           </Pressable>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
