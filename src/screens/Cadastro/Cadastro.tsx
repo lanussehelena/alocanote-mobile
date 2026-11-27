@@ -16,7 +16,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/authService';
 import { getApiErrorMessage } from '../../services/api';
 import { Role } from '../../types';
@@ -43,7 +42,6 @@ type CadastroNavProp = NativeStackNavigationProp<AuthStackParamList, 'Cadastro'>
 export function Cadastro() {
   const navigation = useNavigation<CadastroNavProp>();
   const insets = useSafeAreaInsets();
-  const { signIn } = useAuth();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
 
@@ -100,7 +98,7 @@ export function Cadastro() {
     const telefoneCompleto = telefoneLimpo ? `${ddiLimpo}${telefoneLimpo}` : undefined;
 
     try {
-      await authService.register({
+      const { verificationEmailSent } = await authService.register({
         name: nomeLimpo,
         email: emailLimpo,
         password: senhaLimpa,
@@ -109,32 +107,11 @@ export function Cadastro() {
         customRole: cargoSelecionado.chave === Role.OUTROS ? outroCargo.trim() : null,
       });
 
-      if (Platform.OS === 'web') {
-        window.alert('Conta criada com sucesso! Redirecionando...');
-        try {
-          await signIn({ email: emailLimpo, password: senhaLimpa });
-        } catch {
-          navigation.navigate('Login', { email: emailLimpo });
-        }
-        return;
-      }
-
-      Alert.alert(
-        'Conta Criada com Sucesso!',
-        'Seu cadastro foi realizado. Um e-mail de confirmação foi enviado para o seu endereço.',
-        [
-          {
-            text: 'Entrar agora',
-            onPress: async () => {
-              try {
-                await signIn({ email: emailLimpo, password: senhaLimpa });
-              } catch {
-                navigation.navigate('Login', { email: emailLimpo });
-              }
-            },
-          },
-        ]
-      );
+      navigation.replace('VerificarEmail', {
+        email: emailLimpo,
+        password: senhaLimpa,
+        verificationEmailSent,
+      });
     } catch (error: any) {
       console.error('Erro ao cadastrar usuário:', error);
       const mensagem = getApiErrorMessage(error, 'Não foi possível realizar o cadastro.');

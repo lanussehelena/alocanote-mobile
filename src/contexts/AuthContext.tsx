@@ -28,6 +28,7 @@ export interface AuthUser {
   city?: string | null;
   state?: string | null;
   zipCode?: string | null;
+  emailVerified?: boolean;
 }
 
 interface AuthContextData {
@@ -38,6 +39,10 @@ interface AuthContextData {
   isLoadingAuth: boolean;
   loading: boolean;
   signIn: (credentials: LoginRequestDTO) => Promise<LoginResponseDTO>;
+  completeEmailVerificationSignIn: (params: {
+    email: string;
+    password?: string;
+  }) => Promise<LoginResponseDTO>;
   signInWithGoogle: (params?: GoogleSignInParams) => Promise<LoginResponseDTO>;
   signOut: () => Promise<void>;
   refreshUserProfile: () => Promise<AuthUser | null>;
@@ -52,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     setAuthToken(null);
-    await clearStoredAuthSession();
+    await Promise.all([clearStoredAuthSession(), authService.signOutFirebase()]);
     setToken(null);
     setUser(null);
   }, []);
@@ -83,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         city: profile.city,
         state: profile.state,
         zipCode: profile.zipCode,
+        emailVerified: profile.emailVerified,
       };
       setUser(updated);
       await Promise.all([
@@ -170,6 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         city: profile.city,
         state: profile.state,
         zipCode: profile.zipCode,
+        emailVerified: profile.emailVerified,
       };
     } catch {
       // Caso a rota /users/me falhe, mantemos os dados retornados no login
@@ -190,6 +197,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return persistAuthSession(data);
   };
 
+  const completeEmailVerificationSignIn = async (params: {
+    email: string;
+    password?: string;
+  }): Promise<LoginResponseDTO> => {
+    const data = await authService.completeEmailVerificationSignIn(params);
+    return persistAuthSession(data);
+  };
+
   const signInWithGoogle = async (params?: GoogleSignInParams): Promise<LoginResponseDTO> => {
     const data = await authService.authenticateWithGoogle(params);
     return persistAuthSession(data);
@@ -205,6 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoadingAuth,
         loading: isLoadingAuth,
         signIn,
+        completeEmailVerificationSignIn,
         signInWithGoogle,
         signOut,
         refreshUserProfile,

@@ -9,6 +9,8 @@ import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   updateProfile,
+  reload,
+  signOut as firebaseSignOut,
   Auth,
 } from 'firebase/auth';
 
@@ -34,6 +36,7 @@ export interface FirebaseAuthResult {
   name?: string;
   photoUrl?: string;
   emailVerified?: boolean;
+  verificationEmailSent?: boolean;
   provider: 'GOOGLE' | 'FIREBASE_EMAIL';
 }
 
@@ -94,10 +97,12 @@ export const firebaseAuthClient = {
       }
     }
 
+    let verificationEmailSent = false;
     try {
       await sendEmailVerification(userCredential.user);
+      verificationEmailSent = true;
     } catch {
-      // Ignora caso o envio de e-mail de verificação falhe
+      verificationEmailSent = false;
     }
 
     const idToken = await userCredential.user.getIdToken();
@@ -109,6 +114,7 @@ export const firebaseAuthClient = {
       name: userCredential.user.displayName || displayName?.trim(),
       photoUrl: userCredential.user.photoURL || undefined,
       emailVerified: userCredential.user.emailVerified,
+      verificationEmailSent,
       provider: 'FIREBASE_EMAIL',
     };
   },
@@ -127,7 +133,13 @@ export const firebaseAuthClient = {
       email.trim().toLowerCase(),
       password
     );
-    const idToken = await userCredential.user.getIdToken();
+    try {
+      await reload(userCredential.user);
+    } catch {
+      // Continua com os dados atuais caso o reload falhe
+    }
+
+    const idToken = await userCredential.user.getIdToken(true);
 
     return {
       idToken,
@@ -138,6 +150,107 @@ export const firebaseAuthClient = {
       emailVerified: userCredential.user.emailVerified,
       provider: 'FIREBASE_EMAIL',
     };
+  },
+
+  async checkEmailVerificationStatus(
+    email?: string,
+    password?: string
+  ): Promise<FirebaseAuthResult | null> {
+    const auth = getFirebaseAuth();
+    if (!auth) {
+      return null;
+    }
+
+    const normalizedEmail = email?.trim().toLowerCase();
+    let currentUser = auth.currentUser;
+
+    if (
+      (!currentUser ||
+        (normalizedEmail && currentUser.email?.trim().toLowerCase() !== normalizedEmail)) &&
+      normalizedEmail &&
+      password
+    ) {
+      const credential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+      currentUser = credential.user;
+    }
+
+    if (!currentUser) {
+      return null;
+    }
+
+    await reload(currentUser);
+    const idToken = await currentUser.getIdToken(true);
+
+    return {
+      idToken,
+      uid: currentUser.uid,
+      email: currentUser.email || normalizedEmail || '',
+      name: currentUser.displayName || undefined,
+      photoUrl: currentUser.photoURL || undefined,
+      emailVerified: currentUser.emailVerified,
+      provider: 'FIREBASE_EMAIL',
+    };
+  },
+
+  async resendVerificationEmail(
+    email?: string,
+    password?: string
+  ): Promise<{ alreadyVerified: boolean }> {
+    const auth = getFirebaseAuth();
+    if (!auth) {
+      throw new Error(
+        'O Firebase Authentication não está configurado neste ambiente. Configure as variáveis EXPO_PUBLIC_FIREBASE_* no arquivo .env.'
+      );
+    }
+
+    const normalizedEmail = email?.trim().toLowerCase();
+    let currentUser = auth.currentUser;
+
+    if (
+      (!currentUser ||
+        (normalizedEmail && currentUser.email?.trim().toLowerCase() !== normalizedEmail)) &&
+      normalizedEmail &&
+      password
+    ) {
+      const credential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+      currentUser = credential.user;
+    }
+
+    if (!currentUser) {
+      throw new Error(
+        'Sessão de verificação expirada. Volte para o Login e informe seu e-mail e senha para solicitar um novo link.'
+      );
+    }
+
+    await reload(currentUser);
+
+    if (currentUser.emailVerified) {
+      return { alreadyVerified: true };
+    }
+
+    try {
+      await sendEmailVerification(currentUser);
+      return { alreadyVerified: false };
+    } catch (error: any) {
+      if (error?.code === 'auth/too-many-requests') {
+        throw new Error(
+          'Muitas tentativas em pouco tempo. Aguarde alguns instantes e verifique sua caixa de entrada ou spam.'
+        );
+      }
+      throw new Error('Não foi possível reenviar o e-mail de verificação. Tente novamente em instantes.');
+    }
+  },
+
+  async signOut(): Promise<void> {
+    const auth = getFirebaseAuth();
+    if (!auth) {
+      return;
+    }
+    try {
+      await firebaseSignOut(auth);
+    } catch {
+      // Ignora erro ao encerrar sessão Firebase
+    }
   },
 
   async signInWithGoogleWebPopup(): Promise<FirebaseAuthResult> {

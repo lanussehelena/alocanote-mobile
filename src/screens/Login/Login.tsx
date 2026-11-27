@@ -15,6 +15,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { getApiErrorMessage, wakeUpBackend } from '../../services/api';
+import { isEmailNotVerifiedError } from '../../services/authService';
 import { AuthStackParamList } from '../../types/navigation';
 import { PrimaryButton } from '../../components/PrimaryButton/PrimaryButton';
 import { styles } from './Login.styles';
@@ -60,6 +61,13 @@ export function Login() {
         password,
       });
     } catch (error) {
+      if (isEmailNotVerifiedError(error)) {
+        navigation.navigate('VerificarEmail', {
+          email: emailLimpo,
+          password,
+        });
+        return;
+      }
       console.error('Erro no login:', error);
       const mensagem = getApiErrorMessage(
         error,

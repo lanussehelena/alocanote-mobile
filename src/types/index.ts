@@ -35,6 +35,7 @@ export interface UserResponseDTO {
   state?: string | null;
   zipCode?: string | null;
   createdAt?: string;
+  emailVerified?: boolean;
 }
 
 export interface User extends UserResponseDTO {}
