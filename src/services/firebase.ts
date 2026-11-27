@@ -54,6 +54,7 @@ function getFirebaseAuth(): Auth | null {
 
   if (!firebaseAuthInstance) {
     firebaseAuthInstance = getAuth(firebaseAppInstance);
+    firebaseAuthInstance.languageCode = 'pt';
   }
 
   return firebaseAuthInstance;
@@ -101,7 +102,8 @@ export const firebaseAuthClient = {
     try {
       await sendEmailVerification(userCredential.user);
       verificationEmailSent = true;
-    } catch {
+    } catch (error) {
+      console.error('Erro ao enviar e-mail de verificação no Firebase:', error);
       verificationEmailSent = false;
     }
 
@@ -170,8 +172,18 @@ export const firebaseAuthClient = {
       normalizedEmail &&
       password
     ) {
-      const credential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
-      currentUser = credential.user;
+      try {
+        const credential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+        currentUser = credential.user;
+      } catch (signInError: any) {
+        if (
+          signInError?.code === 'auth/user-not-found' ||
+          signInError?.code === 'auth/invalid-credential'
+        ) {
+          return null;
+        }
+        throw signInError;
+      }
     }
 
     if (!currentUser) {
@@ -212,8 +224,29 @@ export const firebaseAuthClient = {
       normalizedEmail &&
       password
     ) {
-      const credential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
-      currentUser = credential.user;
+      try {
+        const credential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+        currentUser = credential.user;
+      } catch (signInError: any) {
+        if (
+          signInError?.code === 'auth/user-not-found' ||
+          signInError?.code === 'auth/invalid-credential'
+        ) {
+          try {
+            const created = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+            currentUser = created.user;
+          } catch (createError: any) {
+            if (createError?.code === 'auth/email-already-in-use') {
+              throw new Error(
+                'Não foi possível autenticar sua conta no Firebase para reenviar o e-mail. Verifique sua senha no Login.'
+              );
+            }
+            throw createError;
+          }
+        } else {
+          throw signInError;
+        }
+      }
     }
 
     if (!currentUser) {

@@ -131,6 +131,7 @@ export const authService = {
         );
         verificationEmailSent = Boolean(fbResult?.verificationEmailSent);
       } catch (error: any) {
+        console.error('Erro ao registrar usuário no Firebase:', error);
         if (error?.code === 'auth/email-already-in-use') {
           try {
             const resendResult = await firebaseAuthClient.resendVerificationEmail(
@@ -138,7 +139,8 @@ export const authService = {
               data.password
             );
             verificationEmailSent = !resendResult.alreadyVerified;
-          } catch {
+          } catch (resendError) {
+            console.error('Erro ao reenviar e-mail de verificação no cadastro:', resendError);
             verificationEmailSent = false;
           }
         }
